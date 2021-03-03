@@ -1,0 +1,104 @@
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+group "com.github"
+version "1.0"
+
+def projectUrl = "https://github.com/pmelkowski/java-simple-security"
+def junitVersion = "5.7.1"
+
+sourceCompatibility = "1.9"
+targetCompatibility = "1.9"
+compileJava.options.encoding = "UTF-8"
+
+repositories {
+    jcenter()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+javadoc {
+    source = sourceSets.main.allJava
+    failOnError = false
+}
+
+dependencies {
+    testImplementation (
+        "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    )
+}
+
+compileJava {
+    options.compilerArgs.addAll(["--add-exports", "java.base/sun.security.x509=java.simple.security"])
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+jar.dependsOn tasks.test
+
+signing {
+    sign publishing.publications
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    // signing Gradle Module Metadata is not supported for snapshot dependencies
+    enabled = !version.endsWith("-SNAPSHOT")
+}
+
+/*
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = rootProject.name
+            from components.java
+            pom {
+                name = "Java Simple Security"
+                description = "Performs basic security operations without 3-party software."
+                url = ${projectUrl}
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "pmelkowski"
+                        name = "Piotr Melkowski"
+                        email = "piotr.melkowski@gmail.com"
+                    }
+                }
+                scm {
+                    connection = "scm:git:${projectUrl}.git"
+                    developerConnection = "scm:git:${projectUrl}.git"
+                    url = ${projectUrl}
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username SONATYPE_USERNAME
+                password SONATYPE_PASSWORD
+            }
+            if (version.endsWith("-SNAPSHOT")) {
+                url "https://oss.sonatype.org/content/repositories/snapshots"
+            } else {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            }
+        }
+    }
+}
+*/
