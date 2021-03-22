@@ -17,7 +17,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
-import sun.security.x509.CertificateVersion;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public class X509CertificateBuilderTest {
     protected static final X500Principal SUBJECT =
@@ -28,8 +29,8 @@ public class X509CertificateBuilderTest {
     protected static final KeyPair ISSUER_KEYS;
     static {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(Defaults.getKeyAlgorithm());
-            keyGen.initialize(Defaults.getKeySize());
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048);
             SUBJECT_KEYS = keyGen.generateKeyPair();
             ISSUER_KEYS = keyGen.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
@@ -71,14 +72,20 @@ public class X509CertificateBuilderTest {
         );
     }
 
-    @Test
-    public void testValid() throws Exception {
+    @ParameterizedTest
+    @CsvSource({
+        "0,  1, WEEKS,  000000000, MD5withRSA",
+        "1,  2, MONTHS, 111111111, SHA384withRSA",
+        "2, 10, YEARS,  999999999, MD2withRSA",
+    })
+    public void testValid(int version, int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber,
+            String signingAlgorithm) throws Exception {
         X509CertificateBuilder builder = new X509CertificateBuilder(
                 SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
-            .withValidityFromNow(1, ChronoUnit.WEEKS)
-            .withSerialNumber(BigInteger.TWO)
-            .withVersion(CertificateVersion.V2)
-            .withSigningAlgorithm("MD5withRSA");
+            .withVersion(version)
+            .withValidityFromNow(validityAmount, validityUnit)
+            .withSerialNumber(serialNumber)
+            .withSigningAlgorithm(signingAlgorithm);
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),

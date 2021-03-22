@@ -1,65 +1,58 @@
 package com.github.jss;
 
+import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
-import sun.security.x509.CertificateVersion;
+import java.util.Properties;
 
 public class Defaults {
 
-    private static String keyAlgorithm = "RSA";
-    private static int keySize = 2048;
+    // key properties
+    private static final String keyAlgorithm;
+    private static final int keySize;
+    // certificate properties
+    private static final long certificateValidityAmount;
+    private static final TemporalUnit certificateValidityUnit;
+    private static final int certificateVersion;
+    private static final String signingAlgorithm;
 
-    private static long validityAmount = 2;
-    private static TemporalUnit validityUnit = ChronoUnit.YEARS;
-    private static int certificateVersion = CertificateVersion.V3;
-    private static String signingAlgorithm = "SHA256withRSA";
+    static {
+        Properties props = new Properties();
+        try {
+            props.load(Defaults.class.getResourceAsStream("jss-defaults.properties"));
+        } catch (IOException e) {
+            // the code below will throw an unchecked exception
+        }
+        keyAlgorithm = props.getProperty("keyAlgorithm");
+        keySize = Integer.valueOf(props.getProperty("keySize"));
+        certificateValidityAmount = Long.valueOf(props.getProperty("certificateValidityAmount"));
+        certificateValidityUnit = ChronoUnit.valueOf(props.getProperty("certificateValidityUnit"));
+        certificateVersion = Integer.valueOf(props.getProperty("certificateVersion"));
+        signingAlgorithm = props.getProperty("signingAlgorithm");
+    }
 
     public static String getKeyAlgorithm() {
         return keyAlgorithm;
-    }
-
-    public static void setKeyAlgorithm(String keyAlgorithm) {
-        Defaults.keyAlgorithm = keyAlgorithm;
     }
 
     public static int getKeySize() {
         return keySize;
     }
 
-    public static void setKeySize(int keySize) {
-        Defaults.keySize = keySize;
+    public static long getCertificateValidityAmount() {
+        return certificateValidityAmount;
     }
 
-    public static long getValidityAmount() {
-        return validityAmount;
-    }
-
-    public static void setValidityAmount(long validityAmount) {
-        Defaults.validityAmount = validityAmount;
-    }
-
-    public static TemporalUnit getValidityUnit() {
-        return validityUnit;
-    }
-
-    public static void setValidityUnit(TemporalUnit validityUnit) {
-        Defaults.validityUnit = validityUnit;
+    public static TemporalUnit getCertificateValidityUnit() {
+        return certificateValidityUnit;
     }
 
     public static int getCertificateVersion() {
         return certificateVersion;
     }
 
-    public static void setCertificateVersion(int certificateVersion) {
-        Defaults.certificateVersion = certificateVersion;
-    }
-
     public static String getSigningAlgorithm() {
         return signingAlgorithm;
-    }
-
-    public static void setSigningAlgorithm(String signingAlgorithm) {
-        Defaults.signingAlgorithm = signingAlgorithm;
     }
 
 }

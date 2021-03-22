@@ -47,7 +47,7 @@ public class X509CertificateBuilder {
         this.issuer = new X500Name(issuer);
         this.subjectKey = subjectKey;
         this.issuerKey = issuerKey;
-        withValidityFromNow(Defaults.getValidityAmount(), Defaults.getValidityUnit());
+        withValidityFromNow(Defaults.getCertificateValidityAmount(), Defaults.getCertificateValidityUnit());
     }
 
     public X509CertificateBuilder withNotBefore(Date notBefore) {
@@ -87,14 +87,14 @@ public class X509CertificateBuilder {
         AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);
 
         X509CertInfo info = new X509CertInfo();
-        info.set(X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
+        info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(signingAlgorithmId));
+        info.set(X509CertInfo.ISSUER, issuer);
+        info.set(X509CertInfo.KEY, new CertificateX509Key(subjectKey));
         info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(
                 serialNumber != null ? serialNumber : new BigInteger(Long.toString(System.currentTimeMillis()))));
         info.set(X509CertInfo.SUBJECT, subject);
-        info.set(X509CertInfo.ISSUER, issuer);
-        info.set(X509CertInfo.KEY, new CertificateX509Key(subjectKey));
+        info.set(X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
         info.set(X509CertInfo.VERSION, new CertificateVersion(version));
-        info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(signingAlgorithmId));
 
         X509CertImpl certificate = new X509CertImpl(info);
         certificate.sign(issuerKey, signingAlgorithmId.getName());
