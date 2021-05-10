@@ -16,21 +16,21 @@ public class Encoder {
         return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 
-    public static String getPEM(Key key) {
-        StringBuilder name = new StringBuilder();
-        name.append(key.getAlgorithm().toUpperCase());
-        if (key instanceof PrivateKey) {
-            name.append(" PRIVATE");
-        } else if (key instanceof PublicKey) {
-            name.append(" PUBLIC");
-        }
-        name.append(" KEY");
-        return getPEM(name.toString(), Encoder.encode(key));
-    }
-
     public static String encode(Certificate certificate) throws CertificateEncodingException {
         return Base64.getEncoder().encodeToString(certificate.getEncoded());
     }
+
+    public static String getPEM(Key key) {
+      StringBuilder name = new StringBuilder();
+      name.append(key.getAlgorithm().toUpperCase());
+      if (key instanceof PrivateKey) {
+          name.append(" PRIVATE");
+      } else if (key instanceof PublicKey) {
+          name.append(" PUBLIC");
+      }
+      name.append(" KEY");
+      return getPEM(name.toString(), Encoder.encode(key));
+  }
 
     public static String getPEM(Certificate certificate) throws CertificateEncodingException {
         return getPEM("CERTIFICATE", Encoder.encode(certificate));

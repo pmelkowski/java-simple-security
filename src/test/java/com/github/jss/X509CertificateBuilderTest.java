@@ -12,13 +12,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import sun.security.x509.CertificateVersion;
 
 public class X509CertificateBuilderTest {
     protected static final X500Principal SUBJECT =
@@ -83,7 +84,7 @@ public class X509CertificateBuilderTest {
         X509CertificateBuilder builder = new X509CertificateBuilder(
                 SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
             .withVersion(version)
-            .withValidityFromNow(validityAmount, validityUnit)
+            .withValidity(validityAmount, validityUnit)
             .withSerialNumber(serialNumber)
             .withSigningAlgorithm(signingAlgorithm);
         X509Certificate certificate = builder.build();
@@ -97,6 +98,7 @@ public class X509CertificateBuilderTest {
     public void testExpired() throws Exception {
         X509CertificateBuilder builder = new X509CertificateBuilder(
                 SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
+            .withNotBefore(new Date())
             .withNotAfter(new Date());
         X509Certificate certificate = builder.build();
         assertAll(
@@ -109,7 +111,7 @@ public class X509CertificateBuilderTest {
     public void testNotYetValid() throws Exception {
         X509CertificateBuilder builder = new X509CertificateBuilder(
                 SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
-            .withNotBefore(Date.from(ZonedDateTime.now().plus(1, ChronoUnit.WEEKS).toInstant()));
+            .withNotBefore(LocalDate.now().plus(1, ChronoUnit.WEEKS));
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),
@@ -119,20 +121,14 @@ public class X509CertificateBuilderTest {
 
     protected static void commonChecks(X509CertificateBuilder builder, X509Certificate certificate) {
         assertAll(
-            () -> assertEquals(builder.version, certificate.getVersion() - 1),
+            () -> assertEquals(builder.version.get(CertificateVersion.VERSION), certificate.getVersion() - 1),
             () -> assertEquals(builder.subject.asX500Principal(), certificate.getSubjectX500Principal()),
             () -> assertEquals(builder.issuer.asX500Principal(), certificate.getIssuerX500Principal()),
             () -> assertEquals(builder.subjectKey, certificate.getPublicKey()),
-            () -> assertEquals(builder.signingAlgorithm, certificate.getSigAlgName()),
-            () -> assertEquals(builder.notBefore, certificate.getNotBefore()),
-            () -> assertEquals(builder.notAfter, certificate.getNotAfter()),
-            () -> {
-                if (builder.serialNumber != null) {
-                    assertEquals(builder.serialNumber, certificate.getSerialNumber());
-                } else {
-                    assertNotNull(certificate.getSerialNumber());
-                }
-            }
+            () -> assertEquals(builder.signingAlgorithm.getName(), certificate.getSigAlgName()),
+            () -> assertEquals(Date.from(builder.notBefore), certificate.getNotBefore()),
+            () -> assertEquals(Date.from(builder.notAfter), certificate.getNotAfter()),
+            () -> assertEquals(builder.serialNumber, certificate.getSerialNumber())
         );
     }
 

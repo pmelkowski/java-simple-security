@@ -37,6 +37,9 @@ dependencies {
 compileJava {
     options.compilerArgs.addAll(["--add-exports", "java.base/sun.security.x509=java.simple.security"])
 }
+compileTestJava {
+    options.compilerArgs.addAll(["--add-exports", "java.base/sun.security.x509=ALL-UNNAMED"])
+}
 
 test {
     useJUnitPlatform()
