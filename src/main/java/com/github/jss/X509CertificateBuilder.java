@@ -12,16 +12,11 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.chrono.ChronoLocalDate;
-import java.time.chrono.ChronoLocalDateTime;
-import java.time.chrono.ChronoZonedDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalQuery;
+import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import sun.security.x509.AlgorithmId;
@@ -36,39 +31,14 @@ import sun.security.x509.X509CertInfo;
 
 public class X509CertificateBuilder {
 
-    protected static final TemporalQuery<ChronoZonedDateTime<?>> ZONED_QUERY = (temporal) -> {
-        if (temporal instanceof Instant) {
-            return ((Instant) temporal).atZone(ZoneId.systemDefault());
-        }
-        if (temporal instanceof ChronoLocalDate) {
-            temporal = ((ChronoLocalDate) temporal).atTime(LocalTime.MIN);
-        }
-        if (temporal instanceof ChronoLocalDateTime<?>) {
-            temporal = ((ChronoLocalDateTime<?>) temporal).atZone(ZoneId.systemDefault());
-        }
-        if (temporal instanceof ChronoZonedDateTime<?>) {
-            return (ChronoZonedDateTime<?>) temporal;
-        }
-        throw new IllegalArgumentException("Unsupported temporal " + temporal.getClass().getName());
-    };
-
-    protected static final DateTimeFormatter INSTANT_FORMATTER = new DateTimeFormatterBuilder()
-        .appendValue(ChronoField.INSTANT_SECONDS, 10)
-        .appendFraction(ChronoField.NANO_OF_SECOND, 9, 9, false)
-        .toFormatter();
-
-    protected static final DateTimeFormatter TEMPORAL_FORMATTER = new DateTimeFormatterBuilder()
+    protected static final DateTimeFormatter SERIAL_FORMATTER = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
         .appendValue(ChronoField.MONTH_OF_YEAR, 2)
         .appendValue(ChronoField.DAY_OF_MONTH, 2)
-        .optionalStart()
         .appendValue(ChronoField.HOUR_OF_DAY, 2)
         .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
         .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-        .optionalEnd()
-        .optionalStart()
         .appendFraction(ChronoField.NANO_OF_SECOND, 9, 9, false)
-        .optionalEnd()
         .toFormatter();
 
     protected final X500Name subject;
@@ -99,8 +69,8 @@ public class X509CertificateBuilder {
         return this;
     }
 
-    public X509CertificateBuilder withNotBefore(Temporal notBefore) {
-        this.notBefore = notBefore.query(ZONED_QUERY).toInstant();
+    public X509CertificateBuilder withNotBefore(TemporalAdjuster notBefore) {
+        this.notBefore = ZonedDateTime.now().with(notBefore).toInstant();
         return this;
     }
 
@@ -114,8 +84,8 @@ public class X509CertificateBuilder {
         return this;
     }
 
-    public X509CertificateBuilder withNotAfter(Temporal notAfter) {
-        this.notBefore = notAfter.query(ZONED_QUERY).toInstant();
+    public X509CertificateBuilder withNotAfter(TemporalAdjuster notAfter) {
+        this.notAfter = ZonedDateTime.now().with(notAfter).toInstant();
         return this;
     }
 
@@ -128,7 +98,7 @@ public class X509CertificateBuilder {
         if (notBefore == null) {
             notBefore = Instant.now();
         }
-        notAfter = notBefore.query(ZONED_QUERY).plus(amount, unit).toInstant();
+        notAfter = ZonedDateTime.now().with(notBefore).plus(amount, unit).toInstant();
         return this;
     }
 
@@ -142,20 +112,14 @@ public class X509CertificateBuilder {
         return this;
     }
 
-    public X509CertificateBuilder withSerialNumber(Instant serialNumber) {
-        this.serialNumber = new BigInteger(INSTANT_FORMATTER.format(serialNumber));
-        return this;
-    }
-
-    public X509CertificateBuilder withSerialNumber(Temporal serialNumber) {
-        this.serialNumber = new BigInteger(TEMPORAL_FORMATTER.format(serialNumber));
+    public X509CertificateBuilder withSerialNumber(TemporalAdjuster serialNumber) {
+        this.serialNumber = new BigInteger(SERIAL_FORMATTER.format(
+                ZonedDateTime.now().with(serialNumber)));
         return this;
     }
 
     public X509CertificateBuilder withSerialNumber(Date serialNumber) {
-        this.serialNumber = new BigInteger(TEMPORAL_FORMATTER.format(
-                serialNumber.toInstant().query(ZONED_QUERY)));
-        return this;
+        return withSerialNumber(serialNumber.toInstant());
     }
 
     public X509CertificateBuilder withVersion(int version) throws IOException {

@@ -1,21 +1,19 @@
-package com.github.jss;
+package com.github.jss.providers;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import javax.security.auth.x500.X500Principal;
+import java.util.List;
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateSerialNumber;
@@ -26,39 +24,50 @@ import sun.security.x509.X500Name;
 import sun.security.x509.X509CertImpl;
 import sun.security.x509.X509CertInfo;
 
-class TestUtils {
-    static final X500Principal SUBJECT =
-            new X500Principal("O=GitHub, OU=SimpleJavaSecurity, CN=subject");
-    static final X500Principal ISSUER =
-            new X500Principal("O=GitHub, OU=SimpleJavaSecurity, CN=issuer");
+public class Sun extends Provider {
 
-    static KeyPair getKeyPair(String algorithm, int keySize) throws NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(algorithm);
-        keyGen.initialize(keySize);
-        return keyGen.generateKeyPair();
+    public Sun() {
+        super(List.of("SUN", "SunJSSE", "SunJCE", "SunEC"));
     }
 
-    static Certificate getCertificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
+    @Override
+    public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
             int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber,
             String signingAlgorithm) throws NoSuchAlgorithmException, CertificateException,
             IOException, InvalidKeyException, NoSuchProviderException, SignatureException {
         AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);
 
         ZonedDateTime now = ZonedDateTime.now();
+        Date notBefore = Date.from(now.toInstant());
+        Date notAfter = Date.from(now.plus(validityAmount, validityUnit).toInstant());
 
         X509CertInfo info = new X509CertInfo();
         info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(signingAlgorithmId));
-        info.set(X509CertInfo.ISSUER, new X500Name(TestUtils.ISSUER.getName()));
+        info.set(X509CertInfo.ISSUER, new X500Name(ISSUER.getName()));
         info.set(X509CertInfo.KEY, new CertificateX509Key(subjectKey));
         info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(serialNumber));
-        info.set(X509CertInfo.SUBJECT, new X500Name(TestUtils.SUBJECT.getName()));
-        info.set(X509CertInfo.VALIDITY, new CertificateValidity(Date.from(now.toInstant()),
-                Date.from(now.plus(validityAmount, validityUnit).toInstant())));
+        info.set(X509CertInfo.SUBJECT, new X500Name(SUBJECT.getName()));
+        info.set(X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
         info.set(X509CertInfo.VERSION, new CertificateVersion(version));
 
         X509CertImpl certificate = new X509CertImpl(info);
         certificate.sign(issuerKey, signingAlgorithmId.getName());
         return certificate;
+    }
+
+    @Override
+    public String encodeToPEM(Object obj) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PrivateKey decodePrivateKeyPEM(String pem) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PublicKey decodePublicKeyPEM(String pem) throws Exception {
+        throw new UnsupportedOperationException();
     }
 
 }

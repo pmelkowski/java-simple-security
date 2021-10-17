@@ -13,7 +13,7 @@ import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
 import com.github.jss.providers.Provider;
 
-public class EncoderTest {
+public class DecoderTest {
 
     @SuppressWarnings("exports")
     @ParameterizedTest
@@ -27,20 +27,38 @@ public class EncoderTest {
         "SUN, EC,   384",
         "SUN, RSA, 4096"
     })
-    public void testEncodeKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, int keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
-        String encodedPrivate = Encoder.encode(keyPair.getPrivate());
-        String encodedPublic = Encoder.encode(keyPair.getPublic());
+        String encodedPrivate = provider.encodeKey(keyPair.getPrivate());
 
-        PrivateKey decodedPrivate = provider.decodePrivateKey(algorithm, encodedPrivate);
-        PublicKey decodedPublic = provider.decodePublicKey(algorithm, encodedPublic);
+        PrivateKey decodedPrivate = Decoder.decodePrivateKey(algorithm, encodedPrivate);
 
-        assertAll(
-            () -> assertTrue(keyPair.getPrivate().equals(decodedPrivate)),
-            () -> assertTrue(keyPair.getPublic().equals(decodedPublic))
-        );
+        assertTrue(keyPair.getPrivate().equals(decodedPrivate));
+    }
+
+    @SuppressWarnings("exports")
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  DH,   512",
+        "BC,  DSA, 1024",
+        "BC,  EC,   384",
+        "BC,  RSA, 4096",
+        "SUN, DH,   512",
+        "SUN, DSA, 1024",
+        "SUN, EC,   384",
+        "SUN, RSA, 4096"
+    })
+    public void testDecodePublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, int keySize) throws Exception {
+        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
+
+        String encodedPublic = provider.encodeKey(keyPair.getPublic());
+
+        PublicKey decodedPublic = Decoder.decodePublicKey(algorithm, encodedPublic);
+
+        assertTrue(keyPair.getPublic().equals(decodedPublic));
     }
 
     @SuppressWarnings("exports")
@@ -56,7 +74,7 @@ public class EncoderTest {
         "SUN, DSA, 2048, 2,  3, DAYS,   232323232, SHA256",
         "SUN, DSA, 512,  0,  7, HOURS,  454545454, SHA1"
     })
-    public void testEncodeCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodeCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm) throws Exception {
         KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
@@ -65,8 +83,8 @@ public class EncoderTest {
                 keyPair.getPublic(), keyPair.getPrivate(),
                 version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
-        String encoded = Encoder.encode(certificate);
-        Certificate decoded = provider.decodeCertificate("X.509", encoded);
+        String encoded = provider.encodeCertificate(certificate);
+        Certificate decoded = Decoder.decodeCertificate(encoded);
 
         assertAll(
             () -> assertTrue(certificate.equals(decoded)),
@@ -82,20 +100,36 @@ public class EncoderTest {
         "BC,  EC,   384",
         "BC,  RSA, 4096"
     })
-    public void testGetPEMKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePEMPrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, int keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
-        String pemPrivate = Encoder.getPEM(keyPair.getPrivate());
-        String pemPublic = Encoder.getPEM(keyPair.getPublic());
+        String pemPrivate = provider.encodeToPEM(keyPair.getPrivate());
+System.out.println(pemPrivate);
 
-        PrivateKey decodedPrivate = provider.decodePrivateKeyPEM(pemPrivate);
-        PublicKey decodedPublic = provider.decodePublicKeyPEM(pemPublic);
+        PrivateKey decodedPrivate = Decoder.decodePrivateKey(algorithm, pemPrivate);
 
-        assertAll(
-            () -> assertTrue(keyPair.getPrivate().equals(decodedPrivate)),
-            () -> assertTrue(keyPair.getPublic().equals(decodedPublic))
-        );
+        assertTrue(keyPair.getPrivate().equals(decodedPrivate));
+    }
+
+    @SuppressWarnings("exports")
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  DH,   512",
+        "BC,  DSA, 1024",
+        "BC,  EC,   384",
+        "BC,  RSA, 4096"
+    })
+    public void testDecodePEMPublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, int keySize) throws Exception {
+        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
+
+        String pemPublic = provider.encodeToPEM(keyPair.getPublic());
+System.out.println(pemPublic);
+
+        PublicKey decodedPublic = Decoder.decodePublicKey(algorithm, pemPublic);
+
+        assertTrue(keyPair.getPublic().equals(decodedPublic));
     }
 
     @SuppressWarnings("exports")
@@ -104,14 +138,9 @@ public class EncoderTest {
         "BC,  RSA, 4096, 0,  1, WEEKS,  000000000, MD5",
         "BC,  RSA, 1024, 2, 10, YEARS,  999999999, MD2",
         "BC,  DSA, 2048, 2,  3, DAYS,   232323232, SHA256",
-        "BC,  DSA, 512,  0,  7, HOURS,  454545454, SHA1",
-        "SUN, RSA, 1024, 0,  1, WEEKS,  000000000, MD5",
-        "SUN, RSA, 1024, 2, 10, YEARS,  999999999, MD2",
-        "SUN, RSA, 4096, 1,  2, MONTHS, 111111111, SHA384",
-        "SUN, DSA, 2048, 2,  3, DAYS,   232323232, SHA256",
-        "SUN, DSA, 512,  0,  7, HOURS,  454545454, SHA1"
+        "BC,  DSA, 512,  0,  7, HOURS,  454545454, SHA1"
     })
-    public void testGetPEMCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePEMCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm) throws Exception {
         KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
@@ -120,8 +149,9 @@ public class EncoderTest {
                 keyPair.getPublic(), keyPair.getPrivate(),
                 version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
-        String pem = Encoder.getPEM(certificate);
-        Certificate decoded = provider.decodeCertificatePEM("X.509", pem);
+        String pem = provider.encodeToPEM(certificate);
+System.out.println(pem);
+        Certificate decoded = Decoder.decodeCertificate(pem);
 
         assertAll(
             () -> assertTrue(certificate.equals(decoded)),
