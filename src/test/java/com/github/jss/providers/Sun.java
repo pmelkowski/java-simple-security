@@ -13,7 +13,7 @@ import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateSerialNumber;
@@ -27,7 +27,7 @@ import sun.security.x509.X509CertInfo;
 public class Sun extends Provider {
 
     public Sun() {
-        super(List.of("SUN", "SunJSSE", "SunJCE", "SunEC"));
+        super(Set.of("SUN", "SunJSSE", "SunJCE", "SunEC"));
     }
 
     @Override

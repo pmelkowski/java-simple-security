@@ -8,6 +8,8 @@ import java.security.KeyPair;
 import java.security.interfaces.DSAKey;
 import java.security.interfaces.ECKey;
 import java.security.interfaces.RSAKey;
+import java.security.interfaces.XECKey;
+import java.security.spec.NamedParameterSpec;
 import javax.crypto.interfaces.DHKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +33,9 @@ public class KeyPairBuilderTest {
         "DH,   512, javax.crypto.interfaces.DHKey",
         "DSA, 1024, java.security.interfaces.DSAKey",
         "EC,   384, java.security.interfaces.ECKey",
-        "RSA, 4096, java.security.interfaces.RSAKey"
+        "RSA, 4096, java.security.interfaces.RSAKey",
+        "XDH,  255, java.security.interfaces.XECKey",
+        "XDH,  448, java.security.interfaces.XECKey"
     })
     public void test(String algorithm, int keySize, Class<? extends Key> keyClass) throws Exception {
         KeyPairBuilder builder = new KeyPairBuilder()
@@ -66,6 +70,14 @@ public class KeyPairBuilderTest {
         }
         if (key instanceof RSAKey) {
             return ((RSAKey) key).getModulus().bitLength();
+        }
+        if (key instanceof XECKey) {
+            switch (((NamedParameterSpec) ((XECKey) key).getParams()).getName()) {
+                case "X25519":
+                    return 255;
+                case "X448":
+                    return 448;
+            }
         }
         throw new IllegalArgumentException(key.getClass().getName());
     }

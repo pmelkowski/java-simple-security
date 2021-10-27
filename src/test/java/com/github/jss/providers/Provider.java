@@ -6,6 +6,7 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
@@ -15,8 +16,10 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import javax.security.auth.x500.X500Principal;
+import com.github.jss.Algorithms;
 
 abstract public class Provider {
 
@@ -25,30 +28,25 @@ abstract public class Provider {
     static final X500Principal ISSUER =
             new X500Principal("O=GitHub, OU=SimpleJavaSecurity, CN=issuer");
 
-    private final List<String> providerNames;
+    private final Set<String> providerNames;
 
-    Provider(List<String> providerNames) {
+    Provider(Set<String> providerNames) {
         this.providerNames = providerNames;
     }
 
-    @FunctionalInterface
-    private interface ServiceBiFunction<SERVICE> {
-        SERVICE find(String type, String provider) throws Exception;
-    }
-
-    private <SERVICE> SERVICE findService(ServiceBiFunction<SERVICE> service, String type)
+    protected <SERVICE> SERVICE findService(Class<SERVICE> service, String algorithm)
             throws Exception {
-        for (String provider : providerNames) {
-            try {
-                return service.find(type, provider);
-            } catch (Exception e) {
-            }
-        }
-        throw new IllegalArgumentException(type);
+        String provider = Algorithms.getProviderNames(service.getSimpleName(), algorithm).stream()
+            .filter(providerNames::contains)
+            .findFirst()
+            .orElseThrow(() -> new NoSuchAlgorithmException(algorithm));
+        return service.cast(
+                service.getDeclaredMethod("getInstance", String.class, String.class)
+                    .invoke(null, algorithm, provider));
     }
 
     public KeyPair getKeyPair(String algorithm, int keySize) throws Exception {
-        KeyPairGenerator keyGen = findService(KeyPairGenerator::getInstance, algorithm);
+        KeyPairGenerator keyGen = findService(KeyPairGenerator.class, algorithm);
         keyGen.initialize(keySize);
         return keyGen.generateKeyPair();
     }
@@ -58,15 +56,21 @@ abstract public class Provider {
     }
 
     public PrivateKey decodePrivateKey(String algorithm, String encoded) throws Exception {
-        KeyFactory keyFactory = findService(KeyFactory::getInstance, algorithm);
-        return keyFactory.generatePrivate(
-                new PKCS8EncodedKeySpec(Base64.getDecoder().decode(encoded)));
+        return decodePrivateKey(algorithm, Base64.getDecoder().decode(encoded));
+    }
+
+    protected PrivateKey decodePrivateKey(String algorithm, byte[] encoded) throws Exception {
+        KeyFactory keyFactory = findService(KeyFactory.class, algorithm);
+        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(encoded));
     }
 
     public PublicKey decodePublicKey(String algorithm, String encoded) throws Exception {
-        KeyFactory keyFactory = findService(KeyFactory::getInstance, algorithm);
-        return keyFactory.generatePublic(
-                new X509EncodedKeySpec(Base64.getDecoder().decode(encoded)));
+        return decodePublicKey(algorithm, Base64.getDecoder().decode(encoded));
+    }
+
+    protected PublicKey decodePublicKey(String algorithm, byte[] encoded) throws Exception {
+        KeyFactory keyFactory = findService(KeyFactory.class, algorithm);
+        return keyFactory.generatePublic(new X509EncodedKeySpec(encoded));
     }
 
     abstract public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey,
@@ -77,8 +81,8 @@ abstract public class Provider {
         return Base64.getEncoder().encodeToString(certificate.getEncoded());
     }
 
-    public Certificate decodeCertificate(String type, String encoded) throws Exception {
-        CertificateFactory certFactory = findService(CertificateFactory::getInstance, type);
+    public Certificate decodeCertificate(String algorithm, String encoded) throws Exception {
+        CertificateFactory certFactory = findService(CertificateFactory.class, algorithm);
         return certFactory.generateCertificate(
                 new ByteArrayInputStream(Base64.getDecoder().decode(encoded)));
     }
@@ -89,10 +93,14 @@ abstract public class Provider {
 
     abstract public PublicKey decodePublicKeyPEM(String pem) throws Exception;
 
-    public Certificate decodeCertificatePEM(String type, String pem) throws Exception {
-        CertificateFactory certFactory = findService(CertificateFactory::getInstance, type);
+    public Certificate decodeCertificatePEM(String algorithm, String pem) throws Exception {
+        CertificateFactory certFactory = findService(CertificateFactory.class, algorithm);
         return certFactory.generateCertificate(
                 new ByteArrayInputStream(pem.getBytes()));
+    }
+
+    public boolean equals(Key key1, Key key2) throws Exception {
+        return Objects.equals(key1, key2);
     }
 
 }

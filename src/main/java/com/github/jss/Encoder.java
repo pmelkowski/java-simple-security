@@ -6,9 +6,6 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.Base64;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Encoder {
 
@@ -20,27 +17,16 @@ public class Encoder {
         return Base64.getEncoder().encodeToString(certificate.getEncoded());
     }
 
-    public static String getPEM(Key key) {
-      String name = null;
-      if (key instanceof PrivateKey) {
-          name = "PRIVATE KEY";
-      } else if (key instanceof PublicKey) {
-          name = "PUBLIC KEY";
-      }
-      return getPEM(name, encode(key));
-  }
-
-    public static String getPEM(Certificate certificate) throws CertificateEncodingException {
-        return getPEM("CERTIFICATE", encode(certificate));
+    public static String getPEM(PrivateKey key) {
+        return new PEM(null, PEM.Type.PRIVATE_KEY, key.getEncoded()).toString();
     }
 
-    protected static String getPEM(String name, String encoded) {
-        return Stream.of(
-                    Stream.of("-----BEGIN " + name + "-----"),
-                    Stream.of(encoded.split("(?<=\\G.{64})")),
-                    Stream.of("-----END " + name + "-----")
-                ).flatMap(Function.identity())
-            .collect(Collectors.joining("\n"));
+    public static String getPEM(PublicKey key) {
+        return new PEM(null, PEM.Type.PUBLIC_KEY, key.getEncoded()).toString();
+    }
+
+    public static String getPEM(Certificate certificate) throws CertificateEncodingException {
+        return new PEM(null, PEM.Type.CERTIFICATE, certificate.getEncoded()).toString();
     }
 
 }
