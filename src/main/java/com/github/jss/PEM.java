@@ -48,7 +48,8 @@ public class PEM {
 
     public static Optional<PEM> of(String string) {
         return Optional.of(string)
-            .filter(t -> PEM_PATTERN.matcher(t).matches())
+            .map(PEM_PATTERN::matcher)
+            .filter(Matcher::matches)
             .map(PEM::new);
     }
 
@@ -63,7 +64,10 @@ public class PEM {
     }
 
     public PEM(String pem) {
-        Matcher matcher = PEM_PATTERN.matcher(pem);
+        this(PEM_PATTERN.matcher(pem));
+    }
+
+    private PEM(Matcher matcher) {
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid format");
         }

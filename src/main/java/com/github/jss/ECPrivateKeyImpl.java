@@ -14,7 +14,7 @@ import sun.security.util.DerValue;
 import sun.security.util.ObjectIdentifier;
 import sun.security.x509.AlgorithmId;
 
-public class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
+public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
 
     private ECParameterSpec params;
     private BigInteger s;
@@ -68,7 +68,7 @@ public class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
                 der.data.getDerValue().data.getOID()
             );
             // public key
-            der.data.getDerValue().data.getBitString();
+            // der.data.getDerValue().data.getBitString();
         } catch (IOException | InvalidParameterSpecException | NoSuchAlgorithmException e) {
             throw new InvalidKeyException(e);
         }

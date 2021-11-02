@@ -16,7 +16,7 @@ public class ProviderConverter implements ArgumentConverter {
     @Override
     public Object convert(Object source, ParameterContext context)
             throws ArgumentConversionException {
-        switch(source.toString()) {
+        switch (source.toString()) {
             case "BC":
                 return BC;
             case "SUN":
