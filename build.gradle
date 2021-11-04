@@ -39,13 +39,11 @@ dependencies {
 
 compileJava {
     options.compilerArgs.addAll(["--add-exports", "java.base/sun.security.pkcs=java.simple.security",
-                                 "--add-exports", "java.base/sun.security.provider=java.simple.security",
                                  "--add-exports", "java.base/sun.security.util=java.simple.security",
                                  "--add-exports", "java.base/sun.security.x509=java.simple.security"])
 }
 compileTestJava {
     options.compilerArgs.addAll(["--add-exports", "java.base/sun.security.pkcs=ALL-UNNAMED",
-                                 "--add-exports", "java.base/sun.security.provider=ALL-UNNAMED",
                                  "--add-exports", "java.base/sun.security.util=ALL-UNNAMED",
                                  "--add-exports", "java.base/sun.security.x509=ALL-UNNAMED"])
 }

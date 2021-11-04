@@ -7,11 +7,11 @@ import java.security.AlgorithmParameters;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
 import sun.security.pkcs.PKCS8Key;
 import sun.security.util.DerValue;
-import sun.security.util.ObjectIdentifier;
 import sun.security.x509.AlgorithmId;
 
 public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
@@ -23,20 +23,18 @@ public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
         decode(encoded);
     }
 
+    public ECPrivateKeyImpl(String stdName, BigInteger s) throws InvalidKeyException {
+        try {
+            setStdName(stdName);
+            setS(s);
+        } catch (InvalidParameterSpecException | IOException | NoSuchAlgorithmException e) {
+            throw new InvalidKeyException(e);
+        }
+    }
+
     @Override
     public ECParameterSpec getParams() {
         return params;
-    }
-
-    private void setParams(ObjectIdentifier oid)
-            throws InvalidParameterSpecException, NoSuchAlgorithmException {
-        params = ECNamedCurve.getByOid(oid)
-            .map(ECNamedCurve::getSpec)
-            .orElseThrow(() -> new InvalidParameterSpecException(oid.toString()));
-
-        AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
-        algParams.init(params);
-        algid = new AlgorithmId(AlgorithmId.EC_oid, algParams);
     }
 
     @Override
@@ -44,9 +42,22 @@ public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
         return s;
     }
 
+    private void setS(BigInteger s) throws IOException {
+        this.s = s;
+        key = new DerValue(DerValue.tag_Integer, s.toByteArray()).toByteArray();
+    }
+
     private void setKey(byte[] key) throws IOException {
         this.key = key;
         s = new DerValue(DerValue.tag_Integer, key).getPositiveBigInteger();
+    }
+
+    private void setStdName(String stdName)
+            throws InvalidParameterSpecException, NoSuchAlgorithmException {
+        AlgorithmParameters params = AlgorithmParameters.getInstance("EC");
+        params.init(new ECGenParameterSpec(stdName));
+        this.params = params.getParameterSpec(ECParameterSpec.class);
+        algid = new AlgorithmId(AlgorithmId.EC_oid, params);
     }
 
     @Override
@@ -63,9 +74,9 @@ public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
             setKey(
                 der.data.getOctetString()
             );
-            // algorithm
-            setParams(
-                der.data.getDerValue().data.getOID()
+            // algorithm name
+            setStdName(
+                der.data.getDerValue().data.getOID().toString()
             );
             // public key
             // der.data.getDerValue().data.getBitString();
