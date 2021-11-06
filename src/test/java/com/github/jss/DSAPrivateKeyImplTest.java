@@ -139,8 +139,7 @@ public class DSAPrivateKeyImplTest {
             @ConvertWith(HexConverter.class) BigInteger p,
             @ConvertWith(HexConverter.class) BigInteger q,
             @ConvertWith(HexConverter.class) BigInteger g) throws Exception {
-        DSAPrivateKeyImpl key = new DSAPrivateKeyImpl(
-                BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO);
+        DSAPrivateKeyImpl key = new DSAPrivateKeyImpl();
         key.decode(in);
 
         assertAll(

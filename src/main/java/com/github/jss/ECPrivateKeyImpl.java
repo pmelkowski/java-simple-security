@@ -19,6 +19,9 @@ public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
     private ECParameterSpec params;
     private BigInteger s;
 
+    public ECPrivateKeyImpl() {
+    }
+
     public ECPrivateKeyImpl(byte[] encoded) throws InvalidKeyException {
         decode(encoded);
     }

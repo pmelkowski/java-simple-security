@@ -14,6 +14,9 @@ public final class DSAPrivateKeyImpl extends PKCS8Key implements DSAPrivateKey {
 
     private BigInteger x;
 
+    public DSAPrivateKeyImpl() {
+    }
+
     public DSAPrivateKeyImpl(byte[] encoded) throws InvalidKeyException {
         decode(encoded);
     }
