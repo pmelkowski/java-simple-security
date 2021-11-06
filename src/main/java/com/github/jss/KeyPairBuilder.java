@@ -36,11 +36,6 @@ public class KeyPairBuilder {
 
     public KeyPairBuilder withAlgorithm(String alogrithm) {
         this.algorithm = alogrithm;
-        if (getAlgorithm(params)
-                .filter(alg -> !alg.equals(alogrithm))
-                .isPresent()) {
-            params = null;
-        }
         return this;
     }
 
@@ -51,8 +46,6 @@ public class KeyPairBuilder {
 
     public KeyPairBuilder withParams(AlgorithmParameterSpec params) {
         this.params = params;
-        getAlgorithm(params)
-            .ifPresent(alg -> algorithm = alg);
         return this;
     }
 
@@ -62,7 +55,8 @@ public class KeyPairBuilder {
     }
 
     public KeyPair build() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(algorithm);
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(
+                getAlgorithm(params).orElse(algorithm));
 
         if (params != null) {
             if (random != null) {
@@ -92,8 +86,8 @@ public class KeyPairBuilder {
         }
         return PARAM_ALGORITHMS.entrySet().stream()
             .filter(entry -> entry.getKey().isAssignableFrom(params.getClass()))
-            .map(Map.Entry::getValue)
-            .findAny();
+            .findAny()
+            .map(Map.Entry::getValue);
     }
 
 }
