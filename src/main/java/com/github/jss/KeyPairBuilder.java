@@ -10,6 +10,7 @@ import java.security.spec.DSAGenParameterSpec;
 import java.security.spec.DSAParameterSpec;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
+import java.security.spec.NamedParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Map;
 import java.util.Optional;
@@ -55,16 +56,16 @@ public class KeyPairBuilder {
     }
 
     public KeyPair build() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(
-                getAlgorithm(params).orElse(algorithm));
-
+        KeyPairGenerator keyGen;
         if (params != null) {
+            keyGen = KeyPairGenerator.getInstance(getAlgorithm(params).orElse(algorithm));
             if (random != null) {
                 keyGen.initialize(params, random);
             } else {
                 keyGen.initialize(params);
             }
         } else {
+            keyGen = KeyPairGenerator.getInstance(algorithm);
             if (random != null) {
                 keyGen.initialize(size, random);
             } else {
@@ -81,13 +82,20 @@ public class KeyPairBuilder {
     }
 
     protected static Optional<String> getAlgorithm(AlgorithmParameterSpec params) {
-        if (params == null) {
-            return Optional.empty();
-        }
         return PARAM_ALGORITHMS.entrySet().stream()
             .filter(entry -> entry.getKey().isAssignableFrom(params.getClass()))
             .findAny()
-            .map(Map.Entry::getValue);
+            .map(Map.Entry::getValue)
+            .or(() -> {
+                if (params instanceof NamedParameterSpec) {
+                    String name = ((NamedParameterSpec) params).getName();
+                    if (NamedParameterSpec.X25519.getName().equals(name) ||
+                            NamedParameterSpec.X448.getName().equals(name)) {
+                        return Optional.of("XDH");
+                    }
+                }
+                return Optional.empty();
+            });
     }
 
 }
