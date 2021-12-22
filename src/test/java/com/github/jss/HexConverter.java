@@ -1,17 +1,18 @@
 package com.github.jss;
 
 import java.math.BigInteger;
-import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.params.converter.ArgumentConversionException;
-import org.junit.jupiter.params.converter.ArgumentConverter;
+import org.junit.jupiter.params.converter.TypedArgumentConverter;
 
-public class HexConverter implements ArgumentConverter {
+public class HexConverter extends TypedArgumentConverter<String, BigInteger> {
 
-    @SuppressWarnings("exports")
+    protected HexConverter() {
+        super(String.class, BigInteger.class);
+    }
+
     @Override
-    public Object convert(Object source, ParameterContext context)
-            throws ArgumentConversionException {
-        return new BigInteger(source.toString().replace(":", ""), 16);
+    protected BigInteger convert(String source) throws ArgumentConversionException {
+        return new BigInteger(source.replace(":", ""), 16);
     }
 
 }
