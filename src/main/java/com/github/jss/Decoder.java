@@ -19,14 +19,7 @@ public class Decoder {
 
     public static PrivateKey decodePrivateKey(String encodedString)
            throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Optional<PEM> pem = PEM.of(encodedString);
-        if (pem.isPresent() ) {
-            PEM.Type type = pem.get().getType();
-            if (!PEM.Type.PRIVATE_KEY.equals(type)) {
-                throw new InvalidKeyException(type.toString());
-            }
-        }
-
+        Optional<PEM> pem = PEM.of(PEM.Type.PRIVATE_KEY, encodedString);
         byte[] encoded = pem
             .map(PEM::getEncoded)
             .orElseGet(() -> Base64.getDecoder().decode(encodedString));
@@ -47,7 +40,7 @@ public class Decoder {
     }
 
     public static PrivateKey decodePrivateKey(byte[] encoded) throws InvalidKeySpecException {
-        for (String algorithm : Algorithms.getAlgorithms(KeyFactory.class.getSimpleName())) {
+        for (String algorithm : Algorithms.getKeyAlgorithms()) {
             try {
                 return decodePrivateKey(algorithm, encoded);
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
@@ -58,20 +51,13 @@ public class Decoder {
 
     private static PrivateKey decodePrivateKey(String algorithm, byte[] encoded)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return KeyFactory.getInstance(algorithm).generatePrivate(
-                new PKCS8EncodedKeySpec(encoded, algorithm));
+        return KeyFactory.getInstance(algorithm)
+            .generatePrivate(new PKCS8EncodedKeySpec(encoded, algorithm));
     }
 
     public static PublicKey decodePublicKey(String encodedString)
             throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Optional<PEM> pem = PEM.of(encodedString);
-        if (pem.isPresent() ) {
-            PEM.Type type = pem.get().getType();
-            if (!PEM.Type.PUBLIC_KEY.equals(type)) {
-                throw new InvalidKeyException(type.toString());
-            }
-        }
-
+        Optional<PEM> pem = PEM.of(PEM.Type.PUBLIC_KEY, encodedString);
         byte[] encoded = pem
             .map(PEM::getEncoded)
             .orElseGet(() -> Base64.getDecoder().decode(encodedString));
@@ -84,7 +70,7 @@ public class Decoder {
     }
 
     public static PublicKey decodePublicKey(byte[] encoded) throws InvalidKeySpecException {
-        for (String algorithm : Algorithms.getAlgorithms(KeyFactory.class.getSimpleName())) {
+        for (String algorithm : Algorithms.getKeyAlgorithms()) {
             try {
                 return decodePublicKey(algorithm, encoded);
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
@@ -95,41 +81,28 @@ public class Decoder {
 
     private static PublicKey decodePublicKey(String algorithm, byte[] encoded)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return KeyFactory.getInstance(algorithm).generatePublic(
-                new X509EncodedKeySpec(encoded, algorithm));
+        return KeyFactory.getInstance(algorithm)
+            .generatePublic(new X509EncodedKeySpec(encoded, algorithm));
     }
 
-    public static Certificate decodeCertificate(String encodedString)
-            throws CertificateException {
+    public static Certificate decodeCertificate(String encodedString) throws CertificateException {
         byte[] encoded = encodedString.getBytes();
-
-        Optional<PEM> pem = PEM.of(encodedString);
-        if (pem.isPresent() ) {
-            PEM.Type type = pem.get().getType();
-            if (!PEM.Type.CERTIFICATE.equals(type)) {
-                throw new CertificateException(type.toString());
-            }
-        } else {
+        Optional<PEM> pem = PEM.of(PEM.Type.CERTIFICATE, encodedString);
+        if (pem.isEmpty()) {
             encoded = Base64.getDecoder().decode(encoded);
         }
-
         return decodeCertificate(encoded);
     }
 
     public static Certificate decodeCertificate(byte[] encoded) throws CertificateException {
-        for (String algorithm : Algorithms.getAlgorithms(CertificateFactory.class.getSimpleName())) {
+        for (String algorithm : Algorithms.getCertificateAlgorithms()) {
             try {
-                return decodeCertificate(algorithm, encoded);
-            } catch (CertificateException | NoSuchAlgorithmException e) {
+                return CertificateFactory.getInstance(algorithm)
+                    .generateCertificate(new ByteArrayInputStream(encoded));
+            } catch (CertificateException e) {
             }
         }
         throw new CertificateException();
-    }
-
-    private static Certificate decodeCertificate(String algorithm, byte[] encoded)
-            throws CertificateException, NoSuchAlgorithmException {
-        return CertificateFactory.getInstance(algorithm).generateCertificate(
-            new ByteArrayInputStream(encoded));
     }
 
 }

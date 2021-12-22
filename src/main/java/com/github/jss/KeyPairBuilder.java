@@ -30,8 +30,8 @@ public class KeyPairBuilder {
                     RSAKeyGenParameterSpec.class, "RSA"
             );
 
-    protected String algorithm = Defaults.getKeyAlgorithm();
-    protected int size = Defaults.getKeySize();
+    protected String algorithm;
+    protected Integer size;
     protected AlgorithmParameterSpec params;
     protected SecureRandom random;
 
@@ -56,6 +56,10 @@ public class KeyPairBuilder {
     }
 
     public KeyPair build() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        if (algorithm == null) {
+            algorithm = Defaults.getKeyAlgorithm();
+        }
+
         KeyPairGenerator keyGen;
         if (params != null) {
             keyGen = KeyPairGenerator.getInstance(getAlgorithm(params).orElse(algorithm));
@@ -65,6 +69,10 @@ public class KeyPairBuilder {
                 keyGen.initialize(params);
             }
         } else {
+            if (size == null) {
+                size = Defaults.getKeySize();
+            }
+
             keyGen = KeyPairGenerator.getInstance(algorithm);
             if (random != null) {
                 keyGen.initialize(size, random);

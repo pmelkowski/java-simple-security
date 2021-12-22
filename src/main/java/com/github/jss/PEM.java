@@ -46,20 +46,17 @@ public class PEM {
         "(?<type>" + Type.NAMES.keySet().stream()
             .collect(Collectors.joining("|")) + ")");
 
-    public static Optional<PEM> of(String string) {
-        return Optional.of(string)
-            .map(PEM_PATTERN::matcher)
-            .filter(Matcher::matches)
-            .map(PEM::new);
-    }
-
-    private final String algorithm;
     private final Type type;
+    private final String algorithm;
     private final byte[] encoded;
 
-    public PEM(String algorithm, Type type, byte[] encoded) {
-        this.algorithm = algorithm;
+    public PEM(Type type, byte[] encoded) {
+        this(type, null, encoded);
+    }
+
+    public PEM(Type type, String algorithm, byte[] encoded) {
         this.type = type;
+        this.algorithm = algorithm;
         this.encoded = encoded;
     }
 
@@ -112,6 +109,24 @@ public class PEM {
                     Stream.of("-----END " + header + "-----")
                 ).flatMap(Function.identity())
             .collect(Collectors.joining("\n"));
+    }
+
+    public static Optional<PEM> of(String string) {
+        return Optional.of(string)
+            .map(PEM_PATTERN::matcher)
+            .filter(Matcher::matches)
+            .map(PEM::new);
+    }
+
+    public static Optional<PEM> of(Type type, String string) {
+        Optional<PEM> pem = of(string);
+        if (pem.isPresent()) {
+            Type pemType = pem.get().getType();
+            if (!type.equals(pemType)) {
+                throw new IllegalArgumentException("Invalid type: " + pemType.toString());
+            }
+        }
+        return pem;
     }
 
 }

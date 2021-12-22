@@ -134,7 +134,6 @@ public class X509CertificateBuilder {
 
     public X509Certificate build() throws CertificateException, IOException,
             InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
-
         Instant now = Instant.now();
         if (notBefore == null) {
             withNotBefore(now);

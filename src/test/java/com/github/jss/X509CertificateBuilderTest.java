@@ -12,8 +12,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
@@ -111,7 +111,7 @@ public class X509CertificateBuilderTest {
     public void testNotYetValid() throws Exception {
         X509CertificateBuilder builder = new X509CertificateBuilder(
                 SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
-            .withNotBefore(LocalDate.now().plus(1, ChronoUnit.WEEKS));
+            .withNotBefore(TemporalAdjusters.firstDayOfNextMonth());
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),

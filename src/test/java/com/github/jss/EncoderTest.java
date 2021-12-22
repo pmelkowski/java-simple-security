@@ -63,12 +63,12 @@ public class EncoderTest {
         "BC,  XDH,     255",
         "BC,  XDH,     448"
     })
-    public void testGetPEMKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testEncodeKeyToPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, int keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
-        String pemPrivate = Encoder.getPEM(keyPair.getPrivate());
-        String pemPublic = Encoder.getPEM(keyPair.getPublic());
+        String pemPrivate = Encoder.encodeToPEM(keyPair.getPrivate());
+        String pemPublic = Encoder.encodeToPEM(keyPair.getPublic());
 
         PrivateKey decodedPrivate = provider.decodePrivateKeyPEM(pemPrivate);
         PublicKey decodedPublic = provider.decodePublicKeyPEM(pemPublic);
@@ -123,7 +123,7 @@ public class EncoderTest {
         "SUN, DSA, 2048, 2,  3, DAYS,   232323232, SHA256",
         "SUN, DSA, 512,  0,  7, HOURS,  454545454, SHA1"
     })
-    public void testGetPEMCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testEncodeCertificateToPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm) throws Exception {
         KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
@@ -132,7 +132,7 @@ public class EncoderTest {
                 keyPair.getPublic(), keyPair.getPrivate(),
                 version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
-        String pem = Encoder.getPEM(certificate);
+        String pem = Encoder.encodeToPEM(certificate);
         Certificate decoded = provider.decodeCertificatePEM("X.509", pem);
 
         assertAll(

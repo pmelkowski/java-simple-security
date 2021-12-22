@@ -17,16 +17,16 @@ public class Encoder {
         return Base64.getEncoder().encodeToString(certificate.getEncoded());
     }
 
-    public static String getPEM(PrivateKey key) {
-        return new PEM(null, PEM.Type.PRIVATE_KEY, key.getEncoded()).toString();
+    public static String encodeToPEM(PrivateKey key) {
+        return new PEM(PEM.Type.PRIVATE_KEY, key.getEncoded()).toString();
     }
 
-    public static String getPEM(PublicKey key) {
-        return new PEM(null, PEM.Type.PUBLIC_KEY, key.getEncoded()).toString();
+    public static String encodeToPEM(PublicKey key) {
+        return new PEM(PEM.Type.PUBLIC_KEY, key.getEncoded()).toString();
     }
 
-    public static String getPEM(Certificate certificate) throws CertificateEncodingException {
-        return new PEM(null, PEM.Type.CERTIFICATE, certificate.getEncoded()).toString();
+    public static String encodeToPEM(Certificate certificate) throws CertificateEncodingException {
+        return new PEM(PEM.Type.CERTIFICATE, certificate.getEncoded()).toString();
     }
 
 }
