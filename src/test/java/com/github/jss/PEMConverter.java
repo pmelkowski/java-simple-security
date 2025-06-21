@@ -1,6 +1,5 @@
 package com.github.jss;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
@@ -31,8 +30,6 @@ public class PEMConverter implements ArgumentConverter {
             Class<?> type = context.getParameter().getType();
             if (byte[].class.equals(type)) {
                 return encoded;
-            } else if (InputStream.class.equals(type)) {
-                return new ByteArrayInputStream(encoded);
             } else {
                 throw new ArgumentConversionException(
                         "Invalid target type " + type.getName());
