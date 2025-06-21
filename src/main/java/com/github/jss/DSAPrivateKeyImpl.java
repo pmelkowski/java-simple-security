@@ -1,5 +1,6 @@
 package com.github.jss;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -17,8 +18,8 @@ public final class DSAPrivateKeyImpl extends PKCS8Key implements DSAPrivateKey {
     public DSAPrivateKeyImpl() {
     }
 
-    public DSAPrivateKeyImpl(byte[] encoded) throws InvalidKeyException {
-        decode(encoded);
+    public DSAPrivateKeyImpl(byte[] input) throws InvalidKeyException {
+        decode(new ByteArrayInputStream(input));
     }
 
     public DSAPrivateKeyImpl(BigInteger x, BigInteger p, BigInteger q, BigInteger g)
@@ -50,8 +51,7 @@ public final class DSAPrivateKeyImpl extends PKCS8Key implements DSAPrivateKey {
         key = new DerValue(DerValue.tag_Integer, x.toByteArray()).toByteArray();
     }
 
-    @Override
-    public void decode(InputStream in) throws InvalidKeyException {
+    private void decode(InputStream in) throws InvalidKeyException {
         try {
             DerValue der = new DerValue(in);
             if (der.tag != DerValue.tag_Sequence) {

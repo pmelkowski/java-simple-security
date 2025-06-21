@@ -1,5 +1,6 @@
 package com.github.jss;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -22,8 +23,8 @@ public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
     public ECPrivateKeyImpl() {
     }
 
-    public ECPrivateKeyImpl(byte[] encoded) throws InvalidKeyException {
-        decode(encoded);
+    public ECPrivateKeyImpl(byte[] input) throws InvalidKeyException {
+        decode(new ByteArrayInputStream(input));
     }
 
     public ECPrivateKeyImpl(String stdName, BigInteger s) throws InvalidKeyException {
@@ -63,8 +64,7 @@ public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
         algid = new AlgorithmId(AlgorithmId.EC_oid, params);
     }
 
-    @Override
-    public void decode(InputStream in) throws InvalidKeyException {
+    private void decode(InputStream in) throws InvalidKeyException {
         try {
             DerValue der = new DerValue(in);
             if (der.tag != DerValue.tag_Sequence) {
