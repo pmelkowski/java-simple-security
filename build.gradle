@@ -35,6 +35,9 @@ dependencies {
         "org.bouncycastle:bcpkix-jdk15on:${bouncyCastleVersion}",
         "org.bouncycastle:bcprov-jdk15on:${bouncyCastleVersion}"
     )
+    testRuntimeOnly (
+        'org.junit.platform:junit-platform-launcher'
+    )
 }
 
 compileJava {
