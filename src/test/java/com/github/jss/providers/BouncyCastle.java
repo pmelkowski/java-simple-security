@@ -90,16 +90,18 @@ public class BouncyCastle extends Provider {
 
     @Override
     public PrivateKey decodePrivateKeyPEM(String pem) throws Exception {
-        PEMParser parser = new PEMParser(new StringReader(pem));
-        PrivateKeyInfo info = (PrivateKeyInfo) parser.readObject();
-        return new JcaPEMKeyConverter().getPrivateKey(info);
+        try (PEMParser parser = new PEMParser(new StringReader(pem))) {
+	        PrivateKeyInfo info = (PrivateKeyInfo) parser.readObject();
+	        return new JcaPEMKeyConverter().getPrivateKey(info);
+        }
     }
 
     @Override
     public PublicKey decodePublicKeyPEM(String pem) throws Exception {
-        PEMParser parser = new PEMParser(new StringReader(pem));
-        SubjectPublicKeyInfo info = (SubjectPublicKeyInfo) parser.readObject();
-        return new JcaPEMKeyConverter().getPublicKey(info);
+        try (PEMParser parser = new PEMParser(new StringReader(pem))) {
+	        SubjectPublicKeyInfo info = (SubjectPublicKeyInfo) parser.readObject();
+	        return new JcaPEMKeyConverter().getPublicKey(info);
+        }
     }
 
     @Override
