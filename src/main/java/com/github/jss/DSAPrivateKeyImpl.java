@@ -1,8 +1,6 @@
 package com.github.jss;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.interfaces.DSAParams;
@@ -19,7 +17,11 @@ public final class DSAPrivateKeyImpl extends PKCS8Key implements DSAPrivateKey {
     }
 
     public DSAPrivateKeyImpl(byte[] input) throws InvalidKeyException {
-        decode(new ByteArrayInputStream(input));
+        try {
+            decode(new DerValue(input));
+        } catch (IOException e) {
+            throw new InvalidKeyException("Unable to decode key", e);
+        }
     }
 
     public DSAPrivateKeyImpl(BigInteger x, BigInteger p, BigInteger q, BigInteger g)
@@ -51,29 +53,32 @@ public final class DSAPrivateKeyImpl extends PKCS8Key implements DSAPrivateKey {
         key = new DerValue(DerValue.tag_Integer, x.toByteArray()).toByteArray();
     }
 
-    private void decode(InputStream in) throws InvalidKeyException {
+    private void decode(DerValue val) throws InvalidKeyException {
         try {
-            DerValue der = new DerValue(in);
-            if (der.tag != DerValue.tag_Sequence) {
+            if (val.tag != DerValue.tag_Sequence) {
                 throw new InvalidKeyException("Invalid key format");
             }
 
             // version
-            der.data.getInteger();
+            val.data.getInteger();
             // parameters
             setDSAParams(
-                der.data.getBigInteger(),
-                der.data.getBigInteger(),
-                der.data.getBigInteger()
+                val.data.getBigInteger(),
+                val.data.getBigInteger(),
+                val.data.getBigInteger()
             );
             // public key
-            der.data.getBigInteger();
+            val.data.getBigInteger();
             // private key
             setX(
-                der.data.getBigInteger()
+                val.data.getBigInteger()
             );
         } catch (IOException e) {
-            throw new InvalidKeyException(e);
+            throw new InvalidKeyException("Unable to decode key", e);
+        } finally {
+            if (val != null) {
+                val.clear();
+            }
         }
     }
 
