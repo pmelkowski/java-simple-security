@@ -27,7 +27,7 @@ import sun.security.x509.X509CertInfo;
 public class Sun extends Provider {
 
     public Sun() {
-        super(Set.of("SUN", "SunJSSE", "SunJCE", "SunEC"));
+        super(Set.of("SUN", "SunJSSE", "SunJCE", "SunRsaSign", "SunEC"));
     }
 
     @Override
