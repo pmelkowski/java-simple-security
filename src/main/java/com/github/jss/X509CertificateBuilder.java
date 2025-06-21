@@ -152,17 +152,15 @@ public class X509CertificateBuilder {
         }
 
         X509CertInfo info = new X509CertInfo();
-        info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(signingAlgorithm));
-        info.set(X509CertInfo.ISSUER, issuer);
-        info.set(X509CertInfo.KEY, new CertificateX509Key(subjectKey));
-        info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(serialNumber));
-        info.set(X509CertInfo.SUBJECT, subject);
-        info.set(X509CertInfo.VALIDITY, new CertificateValidity(Date.from(notBefore), Date.from(notAfter)));
-        info.set(X509CertInfo.VERSION, version);
+        info.setAlgorithmId(new CertificateAlgorithmId(signingAlgorithm));
+        info.setIssuer(issuer);
+        info.setKey(new CertificateX509Key(subjectKey));
+        info.setSerialNumber(new CertificateSerialNumber(serialNumber));
+        info.setSubject(subject);
+        info.setValidity(new CertificateValidity(Date.from(notBefore), Date.from(notAfter)));
+        info.setVersion(version);
 
-        X509CertImpl certificate = new X509CertImpl(info);
-        certificate.sign(issuerKey, signingAlgorithm.getName());
-        return certificate;
+        return X509CertImpl.newSigned(info, issuerKey, signingAlgorithm.getName());
     }
 
     public static X509Certificate defaultCertificate(String subject, String issuer, PublicKey subjectKey,

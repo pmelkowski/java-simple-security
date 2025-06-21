@@ -19,7 +19,6 @@ import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import sun.security.x509.CertificateVersion;
 
 public class X509CertificateBuilderTest {
     protected static final X500Principal SUBJECT =
@@ -121,7 +120,7 @@ public class X509CertificateBuilderTest {
 
     protected static void commonChecks(X509CertificateBuilder builder, X509Certificate certificate) {
         assertAll(
-            () -> assertEquals(builder.version.get(CertificateVersion.VERSION), certificate.getVersion() - 1),
+            () -> assertEquals(builder.version.getVersion(), certificate.getVersion() - 1),
             () -> assertEquals(builder.subject.asX500Principal(), certificate.getSubjectX500Principal()),
             () -> assertEquals(builder.issuer.asX500Principal(), certificate.getIssuerX500Principal()),
             () -> assertEquals(builder.subjectKey, certificate.getPublicKey()),

@@ -42,17 +42,15 @@ public class Sun extends Provider {
         Date notAfter = Date.from(now.plus(validityAmount, validityUnit).toInstant());
 
         X509CertInfo info = new X509CertInfo();
-        info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(signingAlgorithmId));
-        info.set(X509CertInfo.ISSUER, new X500Name(ISSUER.getName()));
-        info.set(X509CertInfo.KEY, new CertificateX509Key(subjectKey));
-        info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(serialNumber));
-        info.set(X509CertInfo.SUBJECT, new X500Name(SUBJECT.getName()));
-        info.set(X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
-        info.set(X509CertInfo.VERSION, new CertificateVersion(version));
+        info.setAlgorithmId(new CertificateAlgorithmId(signingAlgorithmId));
+        info.setIssuer(new X500Name(ISSUER.getName()));
+        info.setKey(new CertificateX509Key(subjectKey));
+        info.setSerialNumber(new CertificateSerialNumber(serialNumber));
+        info.setSubject(new X500Name(SUBJECT.getName()));
+        info.setValidity(new CertificateValidity(notBefore, notAfter));
+        info.setVersion(new CertificateVersion(version));
 
-        X509CertImpl certificate = new X509CertImpl(info);
-        certificate.sign(issuerKey, signingAlgorithmId.getName());
-        return certificate;
+        return X509CertImpl.newSigned(info, issuerKey, signingAlgorithmId.getName());
     }
 
     @Override
