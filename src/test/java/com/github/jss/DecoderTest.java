@@ -1,13 +1,14 @@
 package com.github.jss;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.temporal.ChronoUnit;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -41,7 +42,7 @@ public class DecoderTest {
         String encodedPrivate = provider.encodeKey(keyPair.getPrivate());
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
-        assertTrue(provider.equals(keyPair.getPrivate(), decodedPrivate));
+        assertEquals(keyPair.getPrivate(), decodedPrivate);
     }
 
     @SuppressWarnings("exports")
@@ -62,7 +63,7 @@ public class DecoderTest {
         String pemPrivate = provider.encodeToPEM(keyPair.getPrivate());
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(pemPrivate);
-        assertTrue(provider.equals(keyPair.getPrivate(), decodedPrivate));
+        assertEquals(keyPair.getPrivate(), decodedPrivate);
     }
 
     @SuppressWarnings("exports")
@@ -91,7 +92,7 @@ public class DecoderTest {
         byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
-        assertTrue(provider.equals(keyPair.getPrivate(), decodedPrivate));
+        assertEquals(keyPair.getPrivate(), decodedPrivate);
     }
 
     @SuppressWarnings("exports")
@@ -120,7 +121,7 @@ public class DecoderTest {
         String encodedPublic = provider.encodeKey(keyPair.getPublic());
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
-        assertTrue(provider.equals(keyPair.getPublic(), decodedPublic));
+        assertEquals(keyPair.getPublic(), decodedPublic);
     }
 
     @SuppressWarnings("exports")
@@ -141,7 +142,7 @@ public class DecoderTest {
         String pemPublic = provider.encodeToPEM(keyPair.getPublic());
 
         PublicKey decodedPublic = Decoder.decodePublicKey(pemPublic);
-        assertTrue(provider.equals(keyPair.getPublic(), decodedPublic));
+        assertEquals(keyPair.getPublic(), decodedPublic);
     }
 
     @SuppressWarnings("exports")
@@ -170,7 +171,7 @@ public class DecoderTest {
         byte[] encodedPublic = keyPair.getPublic().getEncoded();
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
-        assertTrue(provider.equals(keyPair.getPublic(), decodedPublic));
+        assertEquals(keyPair.getPublic(), decodedPublic);
     }
 
     @SuppressWarnings("exports")
@@ -199,8 +200,8 @@ public class DecoderTest {
         Certificate decoded = Decoder.decodeCertificate(encoded);
 
         assertAll(
-            () -> assertTrue(certificate.equals(decoded)),
-            () -> assertTrue(keyPair.getPublic().equals(decoded.getPublicKey()))
+            () -> assertEquals(certificate, decoded),
+            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 
@@ -225,8 +226,8 @@ public class DecoderTest {
         Certificate decoded = Decoder.decodeCertificate(pem);
 
         assertAll(
-            () -> assertTrue(certificate.equals(decoded)),
-            () -> assertTrue(keyPair.getPublic().equals(decoded.getPublicKey()))
+            () -> assertEquals(certificate, decoded),
+            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 
@@ -256,8 +257,8 @@ public class DecoderTest {
         Certificate decoded = Decoder.decodeCertificate(encoded);
 
         assertAll(
-            () -> assertTrue(certificate.equals(decoded)),
-            () -> assertTrue(keyPair.getPublic().equals(decoded.getPublicKey()))
+            () -> assertEquals(certificate, decoded),
+            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 

@@ -1,13 +1,14 @@
 package com.github.jss;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.temporal.ChronoUnit;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -46,8 +47,8 @@ public class EncoderTest {
         PublicKey decodedPublic = provider.decodePublicKey(algorithm, encodedPublic);
 
         assertAll(
-            () -> assertTrue(provider.equals(keyPair.getPrivate(), decodedPrivate)),
-            () -> assertTrue(provider.equals(keyPair.getPublic(), decodedPublic))
+            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
+            () -> assertEquals(keyPair.getPublic(), decodedPublic)
         );
     }
 
@@ -74,8 +75,8 @@ public class EncoderTest {
         PublicKey decodedPublic = provider.decodePublicKeyPEM(pemPublic);
 
         assertAll(
-            () -> assertTrue(provider.equals(keyPair.getPrivate(), decodedPrivate)),
-            () -> assertTrue(provider.equals(keyPair.getPublic(), decodedPublic))
+            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
+            () -> assertEquals(keyPair.getPublic(), decodedPublic)
         );
     }
 
@@ -105,8 +106,8 @@ public class EncoderTest {
         Certificate decoded = provider.decodeCertificate("X.509", encoded);
 
         assertAll(
-            () -> assertTrue(certificate.equals(decoded)),
-            () -> assertTrue(keyPair.getPublic().equals(decoded.getPublicKey()))
+            () -> assertEquals(certificate, decoded),
+            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 
@@ -136,8 +137,8 @@ public class EncoderTest {
         Certificate decoded = provider.decodeCertificatePEM("X.509", pem);
 
         assertAll(
-            () -> assertTrue(certificate.equals(decoded)),
-            () -> assertTrue(keyPair.getPublic().equals(decoded.getPublicKey()))
+            () -> assertEquals(certificate, decoded),
+            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 
