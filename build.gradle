@@ -9,7 +9,7 @@ version "1.0"
 
 def projectUrl = "https://github.com/pmelkowski/java-simple-security"
 def junitVersion = "5.8.1"
-def bouncyCastleVersion = "1.69"
+def bouncyCastleVersion = "1.80"
 
 sourceCompatibility = "1.9"
 targetCompatibility = "1.9"
@@ -32,8 +32,8 @@ javadoc {
 dependencies {
     testImplementation (
         "org.junit.jupiter:junit-jupiter:${junitVersion}",
-        "org.bouncycastle:bcpkix-jdk15on:${bouncyCastleVersion}",
-        "org.bouncycastle:bcprov-jdk15on:${bouncyCastleVersion}"
+        "org.bouncycastle:bcpkix-jdk18on:${bouncyCastleVersion}",
+        "org.bouncycastle:bcprov-jdk18on:${bouncyCastleVersion}"
     )
     testRuntimeOnly (
         'org.junit.platform:junit-platform-launcher'
