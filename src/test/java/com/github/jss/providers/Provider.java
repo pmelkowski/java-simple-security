@@ -16,7 +16,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.Set;
 import javax.security.auth.x500.X500Principal;
 import com.github.jss.Algorithms;
@@ -97,10 +96,6 @@ abstract public class Provider {
         CertificateFactory certFactory = findService(CertificateFactory.class, algorithm);
         return certFactory.generateCertificate(
                 new ByteArrayInputStream(pem.getBytes()));
-    }
-
-    public boolean equals(Key key1, Key key2) throws Exception {
-        return Objects.equals(key1, key2);
     }
 
 }
