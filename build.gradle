@@ -5,7 +5,7 @@ plugins {
 }
 
 group "com.github"
-version "1.0"
+version "1.0-jdk15"
 
 def projectUrl = "https://github.com/pmelkowski/java-simple-security"
 def junitVersion = "5.8.1"
