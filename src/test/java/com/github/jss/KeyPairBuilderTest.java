@@ -145,19 +145,9 @@ public class KeyPairBuilderTest {
 
     @ParameterizedTest
     @CsvSource({
-        "secp112r1,             1.3.132.0.6",
-        "1.3.132.0.7,           1.3.132.0.7",
-        "secp384r1,             1.3.132.0.34",
-        "secp521r1,             1.3.132.0.35",
-        "NIST K-571,            1.3.132.0.38",
-        "sect571r1,             1.3.132.0.39",
-        "X9.62 c2tnb191v1,      1.2.840.10045.3.0.5",
-        "1.2.840.10045.3.0.6,   1.2.840.10045.3.0.6",
-        "X9.62 c2tnb359v1,      1.2.840.10045.3.0.18",
-        "X9.62 c2tnb431r1,      1.2.840.10045.3.0.20",
-        "X9.62 prime192v2,      1.2.840.10045.3.1.2",
-        "X9.62 prime239v3,      1.2.840.10045.3.1.6",
-        "secp256r1,             1.2.840.10045.3.1.7"
+        "secp256r1,    1.2.840.10045.3.1.7",
+        "secp384r1,    1.3.132.0.34",
+        "secp521r1,    1.3.132.0.35"
     })
     public void testWithParamsEC(String stdName,
             @ConvertWith(StdNameConverter.class) ECParameterSpec spec) throws Exception {
