@@ -15,7 +15,13 @@ import sun.security.x509.AlgorithmId;
 
 public final class ECPrivateKeyImpl extends PKCS8Key implements ECPrivateKey {
 
-    private ECParameterSpec params;
+    static {
+        JavaBaseModule.addExports("sun.security.pkcs");
+        JavaBaseModule.addExports("sun.security.util");
+        JavaBaseModule.addExports("sun.security.x509");
+    }
+
+	private ECParameterSpec params;
     private BigInteger s;
 
     public ECPrivateKeyImpl() {

@@ -31,6 +31,10 @@ import sun.security.x509.X509CertInfo;
 
 public class X509CertificateBuilder {
 
+    static {
+        JavaBaseModule.addExports("sun.security.x509");
+    }
+
     protected static final DateTimeFormatter SERIAL_FORMATTER = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
         .appendValue(ChronoField.MONTH_OF_YEAR, 2)

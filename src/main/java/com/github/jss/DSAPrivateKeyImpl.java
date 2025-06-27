@@ -11,7 +11,13 @@ import sun.security.x509.AlgIdDSA;
 
 public final class DSAPrivateKeyImpl extends PKCS8Key implements DSAPrivateKey {
 
-    private BigInteger x;
+    static {
+        JavaBaseModule.addExports("sun.security.pkcs");
+        JavaBaseModule.addExports("sun.security.util");
+        JavaBaseModule.addExports("sun.security.x509");
+    }
+
+	private BigInteger x;
 
     public DSAPrivateKeyImpl() {
     }
