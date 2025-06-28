@@ -18,31 +18,31 @@ import java.util.Optional;
 public class Decoder {
 
     public static PrivateKey decodePrivateKey(String encodedString)
-           throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
+            throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
         Optional<PEM> pem = PEM.of(PEM.Type.PRIVATE_KEY, encodedString);
         byte[] encoded = pem
-            .map(PEM::getEncoded)
-            .orElseGet(() -> Base64.getDecoder().decode(encodedString));
+                .map(PEM::getEncoded)
+                .orElseGet(() -> Base64.getDecoder().decode(encodedString));
 
-        if (pem.map(PEM::getAlgorithm).isPresent()) {
-            String algorithm = pem.get().getAlgorithm();
-            switch (algorithm) {
-                case "DSA":
-                    return new DSAPrivateKeyImpl(encoded);
-                case "EC":
-                    return new ECPrivateKeyImpl(encoded);
-                default:
-                    return decodePrivateKey(algorithm, encoded);
-            }
+        Optional<String> algorithm = pem.map(PEM::getAlgorithm);
+        if (algorithm.isPresent()) {
+            return decodePrivateKey(algorithm.get(), encoded);
         } else {
             return decodePrivateKey(encoded);
         }
     }
 
-    public static PrivateKey decodePrivateKey(byte[] encoded) throws InvalidKeySpecException {
+    public static PrivateKey decodePrivateKey(byte[] encoded)
+            throws InvalidKeySpecException, NoSuchAlgorithmException {
+        Optional<String> decodedAlgorithm = KeyDecoder.decodeAlgorithm(encoded);
+        if (decodedAlgorithm.isPresent()) {
+            return decodePrivateKey(decodedAlgorithm.get(), encoded);
+        }
+
         for (String algorithm : Algorithms.getKeyAlgorithms()) {
             try {
-                return decodePrivateKey(algorithm, encoded);
+                return KeyFactory.getInstance(algorithm)
+                        .generatePrivate(new PKCS8EncodedKeySpec(encoded, algorithm));
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             }
         }
@@ -51,16 +51,25 @@ public class Decoder {
 
     private static PrivateKey decodePrivateKey(String algorithm, byte[] encoded)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
+        Optional<PrivateKey> decoded = KeyDecoder.decodePrivateKey(algorithm, encoded);
+        if (decoded.isPresent()) {
+            try {
+                return (PrivateKey) KeyFactory.getInstance(algorithm)
+                        .translateKey(decoded.get());
+            } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+            }
+        }
+
         return KeyFactory.getInstance(algorithm)
-            .generatePrivate(new PKCS8EncodedKeySpec(encoded, algorithm));
+                .generatePrivate(new PKCS8EncodedKeySpec(encoded, algorithm));
     }
 
     public static PublicKey decodePublicKey(String encodedString)
             throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
         Optional<PEM> pem = PEM.of(PEM.Type.PUBLIC_KEY, encodedString);
         byte[] encoded = pem
-            .map(PEM::getEncoded)
-            .orElseGet(() -> Base64.getDecoder().decode(encodedString));
+                .map(PEM::getEncoded)
+                .orElseGet(() -> Base64.getDecoder().decode(encodedString));
 
         if (pem.map(PEM::getAlgorithm).isPresent()) {
             return decodePublicKey(pem.get().getAlgorithm(), encoded);
@@ -69,10 +78,17 @@ public class Decoder {
         }
     }
 
-    public static PublicKey decodePublicKey(byte[] encoded) throws InvalidKeySpecException {
+    public static PublicKey decodePublicKey(byte[] encoded)
+            throws InvalidKeySpecException, NoSuchAlgorithmException {
+        Optional<String> decodedAlgorithm = KeyDecoder.decodeAlgorithm(encoded);
+        if (decodedAlgorithm.isPresent()) {
+            return decodePublicKey(decodedAlgorithm.get(), encoded);
+        }
+
         for (String algorithm : Algorithms.getKeyAlgorithms()) {
             try {
-                return decodePublicKey(algorithm, encoded);
+                return KeyFactory.getInstance(algorithm)
+                        .generatePublic(new X509EncodedKeySpec(encoded, algorithm));
             } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             }
         }
@@ -81,8 +97,17 @@ public class Decoder {
 
     private static PublicKey decodePublicKey(String algorithm, byte[] encoded)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
+        Optional<PublicKey> decoded = KeyDecoder.decodePublicKey(algorithm, encoded);
+        if (decoded.isPresent()) {
+            try {
+                return (PublicKey) KeyFactory.getInstance(algorithm)
+                        .translateKey(decoded.get());
+            } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+            }
+        }
+
         return KeyFactory.getInstance(algorithm)
-            .generatePublic(new X509EncodedKeySpec(encoded, algorithm));
+                .generatePublic(new X509EncodedKeySpec(encoded, algorithm));
     }
 
     public static Certificate decodeCertificate(String encodedString) throws CertificateException {
@@ -98,7 +123,7 @@ public class Decoder {
         for (String algorithm : Algorithms.getCertificateAlgorithms()) {
             try {
                 return CertificateFactory.getInstance(algorithm)
-                    .generateCertificate(new ByteArrayInputStream(encoded));
+                        .generateCertificate(new ByteArrayInputStream(encoded));
             } catch (CertificateException e) {
             }
         }
