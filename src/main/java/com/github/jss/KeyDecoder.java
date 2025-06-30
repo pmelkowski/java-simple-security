@@ -13,7 +13,6 @@ import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.crypto.interfaces.DHPrivateKey;
@@ -29,16 +28,6 @@ final class KeyDecoder {
     static {
         JavaBaseModule.addExports("sun.security.util");
     }
-
-    // DH is not registered and can not be found by KnownOIDs.findMatch()
-    private static final Map<String, String> ALGORITHM_OIDS = Map.of(
-            KnownOIDs.DSA.value(),      KnownOIDs.DSA.name(),
-            KnownOIDs.EC.value(),       KnownOIDs.EC.name(),
-            KnownOIDs.X942_DH.value(),  "DH",
-            KnownOIDs.RSA.value(),      KnownOIDs.RSA.name(),
-            KnownOIDs.X25519.value(),   KnownOIDs.X25519.name(),
-            KnownOIDs.X448.value(),     KnownOIDs.X448.name()
-    );
 
     static Optional<String> decodeAlgorithm(byte[] encoded) {
         DerValue val = null;
@@ -59,7 +48,15 @@ final class KeyDecoder {
             DerInputStream delAlgInStream = derAlgorithm.toDerInputStream();
 
             // algorithm.OID
-            return Optional.ofNullable(ALGORITHM_OIDS.get(delAlgInStream.getOID().toString()));
+            String oid = delAlgInStream.getOID().toString();
+
+            if (KnownOIDs.X942_DH.value().equals(oid)) {
+                // OID is not registered and can't be found by KnownOIDs.findMatch()
+                return Optional.of("DH");
+            }
+            return Optional.ofNullable(KnownOIDs.findMatch(oid))
+                    .map(KnownOIDs::stdName)
+                    .map(String::toUpperCase);
         } catch (IOException e) {
             return Optional.empty();
         } finally {
@@ -79,6 +76,7 @@ final class KeyDecoder {
 
             switch (algorithm) {
             case "DH":
+            case "DIFFIEHELLMAN":
                 return decodePrivateKeyDH(val);
             case "DSA":
                 return decodePrivateKeyDSA(val);
