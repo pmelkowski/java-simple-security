@@ -106,6 +106,7 @@ final class KeyDecoder {
 
             switch (algorithm) {
             case "DH":
+            case "DIFFIEHELLMAN":
                 return decodePublicKeyDH(val);
             default:
                 return Optional.empty();
