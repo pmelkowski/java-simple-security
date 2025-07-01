@@ -9,6 +9,7 @@ import java.security.KeyPair;
 import java.security.interfaces.DSAKey;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.ECKey;
+import java.security.interfaces.EdECKey;
 import java.security.interfaces.RSAKey;
 import java.security.interfaces.XECKey;
 import java.security.spec.DSAParameterSpec;
@@ -40,12 +41,14 @@ public class KeyPairBuilderTest {
 
     @ParameterizedTest
     @CsvSource({
-        "DH,   512, javax.crypto.interfaces.DHKey",
-        "DSA, 1024, java.security.interfaces.DSAKey",
-        "EC,   384, java.security.interfaces.ECKey",
-        "RSA, 4096, java.security.interfaces.RSAKey",
-        "XDH,  255, java.security.interfaces.XECKey",
-        "XDH,  448, java.security.interfaces.XECKey"
+        "DH,      512, javax.crypto.interfaces.DHKey",
+        "DSA,    1024, java.security.interfaces.DSAKey",
+        "EC,      384, java.security.interfaces.ECKey",
+        "EdDSA,   255, java.security.interfaces.EdECKey",
+        "EdDSA,   448, java.security.interfaces.EdECKey",
+        "RSA,    4096, java.security.interfaces.RSAKey",
+        "XDH,     255, java.security.interfaces.XECKey",
+        "XDH,     448, java.security.interfaces.XECKey"
     })
     public void testWithSize(String algorithm, int keySize, Class<? extends Key> keyClass)
             throws Exception {
@@ -168,6 +171,30 @@ public class KeyPairBuilderTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {
+        "Ed25519",
+        "Ed448"
+    })
+    public void testWithParamsEdDSA(String stdName) throws Exception {
+        KeyPair keyPair = new KeyPairBuilder()
+            .withParams(new NamedParameterSpec(stdName))
+            .build();
+
+        assertAll(
+            () -> assertTrue(keyPair.getPrivate() instanceof EdECKey),
+            () -> assertTrue(keyPair.getPublic() instanceof EdECKey),
+            () -> assertEquals("EdDSA", keyPair.getPrivate().getAlgorithm()),
+            () -> assertEquals("EdDSA", keyPair.getPublic().getAlgorithm())
+        );
+        assertAll(
+            () -> assertEquals(stdName, ((NamedParameterSpec)
+                    ((EdECKey) keyPair.getPrivate()).getParams()).getName()),
+            () -> assertEquals(stdName, ((NamedParameterSpec)
+                    ((EdECKey) keyPair.getPublic()).getParams()).getName())
+        );
+    }
+
+    @ParameterizedTest
     @CsvSource({
         " 512,  65537",
         " 768,   4097",
@@ -229,14 +256,25 @@ public class KeyPairBuilderTest {
         if (key instanceof RSAKey) {
             return ((RSAKey) key).getModulus().bitLength();
         }
+
+        NamedParameterSpec namedParameterSpec = null;
+        if (key instanceof EdECKey) {
+            namedParameterSpec = (NamedParameterSpec) ((EdECKey) key).getParams();
+        }
         if (key instanceof XECKey) {
-            switch (((NamedParameterSpec) ((XECKey) key).getParams()).getName()) {
+            namedParameterSpec = (NamedParameterSpec) ((XECKey) key).getParams();
+        }
+        if (namedParameterSpec != null) {
+            switch (namedParameterSpec.getName()) {
+                case "Ed25519":
                 case "X25519":
                     return 255;
+                case "Ed448":
                 case "X448":
                     return 448;
             }
         }
+
         throw new IllegalArgumentException(key.getClass().getName());
     }
 
