@@ -12,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
@@ -97,8 +98,8 @@ public class X509CertificateBuilderTest {
     public void testExpired() throws Exception {
         X509CertificateBuilder builder = new X509CertificateBuilder(
                 SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
-            .withNotBefore(new Date())
-            .withNotAfter(new Date());
+            .withNotBefore(Instant.now().minusSeconds(2))
+            .withNotAfter(Instant.now().minusSeconds(1));
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),
