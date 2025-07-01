@@ -96,11 +96,7 @@ public class KeyPairBuilder {
             .map(Map.Entry::getValue)
             .or(() -> {
                 if (params instanceof NamedParameterSpec) {
-                    String name = ((NamedParameterSpec) params).getName();
-                    if (NamedParameterSpec.X25519.getName().equals(name) ||
-                            NamedParameterSpec.X448.getName().equals(name)) {
-                        return Optional.of("XDH");
-                    }
+                    return Optional.of(((NamedParameterSpec) params).getName());
                 }
                 return Optional.empty();
             });

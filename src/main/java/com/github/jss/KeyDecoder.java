@@ -50,10 +50,6 @@ final class KeyDecoder {
             // algorithm.OID
             String oid = delAlgInStream.getOID().toString();
 
-            if (KnownOIDs.X942_DH.value().equals(oid)) {
-                // OID is not registered and can't be found by KnownOIDs.findMatch()
-                return Optional.of("DH");
-            }
             return Optional.ofNullable(KnownOIDs.findMatch(oid))
                     .map(KnownOIDs::stdName)
                     .map(String::toUpperCase);
