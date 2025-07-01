@@ -1,5 +1,6 @@
 package com.github.jss;
 
+import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -10,7 +11,6 @@ import java.security.spec.DSAGenParameterSpec;
 import java.security.spec.DSAParameterSpec;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
-import java.security.spec.NamedParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Map;
 import java.util.Optional;
@@ -94,16 +94,19 @@ public class KeyPairBuilder {
             .filter(entry -> entry.getKey().isAssignableFrom(params.getClass()))
             .findAny()
             .map(Map.Entry::getValue)
-            .or(() -> {
-                if (params instanceof NamedParameterSpec) {
-                    String name = ((NamedParameterSpec) params).getName();
-                    if (NamedParameterSpec.X25519.getName().equals(name) ||
-                            NamedParameterSpec.X448.getName().equals(name)) {
-                        return Optional.of("XDH");
-                    }
-                }
-                return Optional.empty();
-            });
+            .or(() -> getFromNamedParameterSpec(params));
+    }
+
+    private static Optional<String> getFromNamedParameterSpec(AlgorithmParameterSpec params) {
+        // Use reflection for NamedParameterSpec added in JRE 11
+        Class<?> namedParameterSpec = JavaBaseModule.getClass("java.security.spec.NamedParameterSpec");
+        if ((namedParameterSpec != null) && namedParameterSpec.isAssignableFrom(params.getClass())) {
+            try {
+                return Optional.of((String) namedParameterSpec.getMethod("getName").invoke(params));
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+            }
+        }
+        return Optional.empty();
     }
 
 }

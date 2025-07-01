@@ -1,6 +1,7 @@
 package com.github.jss;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +22,6 @@ import javax.crypto.spec.DHParameterSpec;
 
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
-import sun.security.util.KnownOIDs;
 
 final class KeyDecoder {
 
@@ -30,18 +30,18 @@ final class KeyDecoder {
     }
 
     static Optional<String> decodeAlgorithm(byte[] encoded) {
-        DerValue val = null;
         try {
-            val = new DerValue(encoded);
+            DerValue val = new DerValue(encoded);
             if (val.tag != DerValue.tag_Sequence) {
                 return Optional.empty();
             }
 
-            // version (private keys only)
-            val.data.getOptional(DerValue.tag_Integer);
-
-            // algorithm
+            // algorithm or version (private keys only)
             DerValue derAlgorithm = val.data.getDerValue();
+            if (derAlgorithm.tag == DerValue.tag_Integer) {
+                // version, read next value
+                derAlgorithm = val.data.getDerValue();
+            }
             if (derAlgorithm.tag != DerValue.tag_Sequence) {
                 return Optional.empty();
             }
@@ -50,26 +50,29 @@ final class KeyDecoder {
             // algorithm.OID
             String oid = delAlgInStream.getOID().toString();
 
-            if (KnownOIDs.X942_DH.value().equals(oid)) {
-                // OID is not registered and can't be found by KnownOIDs.findMatch()
-                return Optional.of("DH");
+            // Use reflection for KnownOIDs added in JRE 11
+            Class<?> knownOIDs = JavaBaseModule.getClass("sun.security.util.KnownOIDs");
+            if (knownOIDs != null) {
+                try {
+                    Object found = knownOIDs.getMethod("findMatch", String.class).invoke(null, oid);
+                    if (found == null) {
+                        return Optional.empty();
+                    }
+                    return Optional.of(((String) knownOIDs.getMethod("stdName").invoke(found)).toUpperCase());
+                } catch (SecurityException | IllegalAccessException | InvocationTargetException
+                        | NoSuchMethodException e) {
+                }
             }
-            return Optional.ofNullable(KnownOIDs.findMatch(oid))
-                    .map(KnownOIDs::stdName)
-                    .map(String::toUpperCase);
+
+            return Algorithms.findByOid(oid);
         } catch (IOException e) {
             return Optional.empty();
-        } finally {
-            if (val != null) {
-                val.clear();
-            }
         }
     }
 
     static Optional<PrivateKey> decodePrivateKey(String algorithm, byte[] encoded) {
-        DerValue val = null;
         try {
-            val = new DerValue(encoded);
+            DerValue val = new DerValue(encoded);
             if (val.tag != DerValue.tag_Sequence) {
                 return Optional.empty();
             }
@@ -89,17 +92,12 @@ final class KeyDecoder {
             }
         } catch (IOException | NoSuchAlgorithmException | InvalidParameterSpecException e) {
             return Optional.empty();
-        } finally {
-            if (val != null) {
-                val.clear();
-            }
         }
     }
 
     static Optional<PublicKey> decodePublicKey(String algorithm, byte[] encoded) {
-        DerValue val = null;
         try {
-            val = new DerValue(encoded);
+            DerValue val = new DerValue(encoded);
             if (val.tag != DerValue.tag_Sequence) {
                 return Optional.empty();
             }
@@ -113,10 +111,6 @@ final class KeyDecoder {
             }
         } catch (IOException e) {
             return Optional.empty();
-        } finally {
-            if (val != null) {
-                val.clear();
-            }
         }
     }
 
@@ -162,7 +156,7 @@ final class KeyDecoder {
 
             @Override
             public byte[] getEncoded() {
-                return val.toByteArray();
+                return null;
             }
 
             @Override
@@ -182,13 +176,14 @@ final class KeyDecoder {
         // version
         val.data.getBigInteger();
 
-        if (val.data.getOptional(DerValue.tag_Sequence).isPresent()) {
+        DerValue next = val.data.getDerValue();
+        if (next.tag == DerValue.tag_Sequence) {
             // Key with nested sequences is properly handled by the Sun Provider
             return Optional.empty();
         }
 
         // parameters
-        BigInteger p = val.data.getBigInteger();
+        BigInteger p = next.getBigInteger();
         BigInteger q = val.data.getBigInteger();
         BigInteger g = val.data.getBigInteger();
 
@@ -211,7 +206,7 @@ final class KeyDecoder {
 
             @Override
             public byte[] getEncoded() {
-                return val.toByteArray();
+                return null;
             }
 
             @Override
@@ -247,13 +242,14 @@ final class KeyDecoder {
         // version
         val.data.getBigInteger();
 
-        if (val.data.getOptional(DerValue.tag_Sequence).isPresent()) {
+        DerValue next = val.data.getDerValue();
+        if (next.tag == DerValue.tag_Sequence) {
             // Key with nested sequences is properly handled by the Sun Provider
             return Optional.empty();
         }
 
         // private key
-        BigInteger s = new DerValue(DerValue.tag_Integer, val.data.getOctetString()).getPositiveBigInteger();
+        BigInteger s = new DerValue(DerValue.tag_Integer, next.getOctetString()).getPositiveBigInteger();
 
         // algorithm name
         AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
@@ -276,7 +272,7 @@ final class KeyDecoder {
 
             @Override
             public byte[] getEncoded() {
-                return val.toByteArray();
+                return null;
             }
 
             @Override
@@ -296,13 +292,14 @@ final class KeyDecoder {
         // version
         val.data.getBigInteger();
 
-        if (val.data.getOptional(DerValue.tag_Sequence).isPresent()) {
+        DerValue next = val.data.getDerValue();
+        if (next.tag == DerValue.tag_Sequence) {
             // Key with nested sequences is properly handled by the Sun Provider
             return Optional.empty();
         }
 
         // parameters
-        BigInteger n = val.data.getBigInteger();
+        BigInteger n = next.getBigInteger();
         BigInteger e = val.data.getBigInteger();
         BigInteger d = val.data.getBigInteger();
         BigInteger p = val.data.getBigInteger();
@@ -324,7 +321,7 @@ final class KeyDecoder {
 
             @Override
             public byte[] getEncoded() {
-                return val.toByteArray();
+                return null;
             }
 
             @Override
@@ -408,7 +405,7 @@ final class KeyDecoder {
 
             @Override
             public byte[] getEncoded() {
-                return val.toByteArray();
+                return null;
             }
 
             @Override

@@ -36,4 +36,8 @@ final class JavaBaseModule {
         }
     }
 
+    static Class<?> getClass(String name) {
+        return Class.forName(JAVA_BASE, name);
+    }
+
 }

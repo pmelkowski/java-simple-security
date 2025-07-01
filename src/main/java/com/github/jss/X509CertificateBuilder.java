@@ -1,6 +1,8 @@
 package com.github.jss;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -156,15 +158,51 @@ public class X509CertificateBuilder {
         }
 
         X509CertInfo info = new X509CertInfo();
-        info.setAlgorithmId(new CertificateAlgorithmId(signingAlgorithm));
-        info.setIssuer(issuer);
-        info.setKey(new CertificateX509Key(subjectKey));
-        info.setSerialNumber(new CertificateSerialNumber(serialNumber));
-        info.setSubject(subject);
-        info.setValidity(new CertificateValidity(Date.from(notBefore), Date.from(notAfter)));
-        info.setVersion(version);
+        CertificateAlgorithmId algorithmId = new CertificateAlgorithmId(signingAlgorithm);
+        CertificateX509Key certificateKey = new CertificateX509Key(subjectKey);
+        CertificateSerialNumber certificateSN = new CertificateSerialNumber(serialNumber);
+        CertificateValidity certificateValidity = new CertificateValidity(Date.from(notBefore), Date.from(notAfter));
 
-        return X509CertImpl.newSigned(info, issuerKey, signingAlgorithm.getName());
+        // Use reflection to handle various JRE versions
+        try {
+            if (Runtime.version().version().get(0) < 20) {
+                Method setter = X509CertInfo.class.getMethod("set", String.class, Object.class);
+                setter.invoke(info, X509CertInfo.ALGORITHM_ID, algorithmId);
+                setter.invoke(info, X509CertInfo.ISSUER, issuer);
+                setter.invoke(info, X509CertInfo.KEY, certificateKey);
+                setter.invoke(info, X509CertInfo.SERIAL_NUMBER, certificateSN);
+                setter.invoke(info, X509CertInfo.SUBJECT, subject);
+                setter.invoke(info, X509CertInfo.VALIDITY, certificateValidity);
+                setter.invoke(info, X509CertInfo.VERSION, version);
+
+                X509CertImpl certificate = X509CertImpl.class.getConstructor(X509CertInfo.class).newInstance(info);
+                X509CertImpl.class.getMethod("sign", PrivateKey.class, String.class)
+                    .invoke(certificate, issuerKey, signingAlgorithm.getName());
+                return certificate;
+            } else {
+                X509CertInfo.class.getMethod("setAlgorithmId", CertificateAlgorithmId.class)
+                    .invoke(info, algorithmId);
+                X509CertInfo.class.getMethod("setIssuer", X500Name.class)
+                    .invoke(info, issuer);
+                X509CertInfo.class.getMethod("setKey", CertificateX509Key.class)
+                    .invoke(info, certificateKey);
+                X509CertInfo.class.getMethod("setSerialNumber", CertificateSerialNumber.class)
+                    .invoke(info, certificateSN);
+                X509CertInfo.class.getMethod("setSubject", X500Name.class)
+                    .invoke(info, subject);
+                X509CertInfo.class.getMethod("setValidity", CertificateValidity.class)
+                    .invoke(info, certificateValidity);
+                X509CertInfo.class.getMethod("setVersion", CertificateVersion.class)
+                    .invoke(info, version);
+
+                return (X509Certificate) X509CertImpl.class.getMethod("newSigned",
+                        X509CertInfo.class, PrivateKey.class, String.class)
+                    .invoke(X509CertImpl.class, info, issuerKey, signingAlgorithm.getName());
+            }
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException
+                | SecurityException | InstantiationException | IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static X509Certificate defaultCertificate(String subject, String issuer, PublicKey subjectKey,

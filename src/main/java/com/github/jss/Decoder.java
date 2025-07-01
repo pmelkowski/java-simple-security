@@ -113,7 +113,7 @@ public class Decoder {
     public static Certificate decodeCertificate(String encodedString) throws CertificateException {
         byte[] encoded = encodedString.getBytes();
         Optional<PEM> pem = PEM.of(PEM.Type.CERTIFICATE, encodedString);
-        if (pem.isEmpty()) {
+        if (!pem.isPresent()) {
             encoded = Base64.getDecoder().decode(encoded);
         }
         return decodeCertificate(encoded);
