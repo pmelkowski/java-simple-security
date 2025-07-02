@@ -121,7 +121,7 @@ public class X509CertificateBuilderTest {
 
     protected static void commonChecks(X509CertificateBuilder builder, X509Certificate certificate) {
         assertAll(
-            () -> assertEquals(builder.version.getVersion(), certificate.getVersion() - 1),
+            () -> assertEquals(0, builder.version.compare(certificate.getVersion() - 1)),
             () -> assertEquals(builder.subject.asX500Principal(), certificate.getSubjectX500Principal()),
             () -> assertEquals(builder.issuer.asX500Principal(), certificate.getIssuerX500Principal()),
             () -> assertEquals(builder.subjectKey, certificate.getPublicKey()),
