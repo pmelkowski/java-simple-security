@@ -33,7 +33,6 @@ public class AlgorithmsTest {
         "KeyPairGenerator",
         "KeyStore",
         "MessageDigest",
-        "Policy",
         "SecureRandom",
         "Signature"
     })
