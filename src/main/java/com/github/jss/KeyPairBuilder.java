@@ -56,24 +56,24 @@ public class KeyPairBuilder {
     }
 
     public KeyPair build() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        if (algorithm == null) {
-            algorithm = Defaults.getKeyAlgorithm();
-        }
-
         KeyPairGenerator keyGen;
         if (params != null) {
-            keyGen = KeyPairGenerator.getInstance(getAlgorithm(params).orElse(algorithm));
+            keyGen = KeyPairGenerator.getInstance(Optional.ofNullable(algorithm)
+                    .or(() -> getAlgorithm(params))
+                    .orElse(Defaults.getKeyAlgorithm()));
+
             if (random != null) {
                 keyGen.initialize(params, random);
             } else {
                 keyGen.initialize(params);
             }
         } else {
+            keyGen = KeyPairGenerator.getInstance(
+                    algorithm != null ? algorithm : Defaults.getKeyAlgorithm());
+
             if (size == null) {
                 size = Defaults.getKeySize();
             }
-
-            keyGen = KeyPairGenerator.getInstance(algorithm);
             if (random != null) {
                 keyGen.initialize(size, random);
             } else {

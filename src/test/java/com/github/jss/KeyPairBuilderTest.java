@@ -41,14 +41,15 @@ public class KeyPairBuilderTest {
 
     @ParameterizedTest
     @CsvSource({
-        "DH,      512, javax.crypto.interfaces.DHKey",
-        "DSA,    1024, java.security.interfaces.DSAKey",
-        "EC,      384, java.security.interfaces.ECKey",
-        "EdDSA,   255, java.security.interfaces.EdECKey",
-        "EdDSA,   448, java.security.interfaces.EdECKey",
-        "RSA,    4096, java.security.interfaces.RSAKey",
-        "XDH,     255, java.security.interfaces.XECKey",
-        "XDH,     448, java.security.interfaces.XECKey"
+        "DH,          512, javax.crypto.interfaces.DHKey",
+        "DSA,        1024, java.security.interfaces.DSAKey",
+        "EC,          384, java.security.interfaces.ECKey",
+        "EdDSA,       255, java.security.interfaces.EdECKey",
+        "EdDSA,       448, java.security.interfaces.EdECKey",
+        "RSA,        4096, java.security.interfaces.RSAKey",
+        "RSASSA-PSS, 3072, java.security.interfaces.RSAKey",
+        "XDH,         255, java.security.interfaces.XECKey",
+        "XDH,         448, java.security.interfaces.XECKey"
     })
     public void testWithSize(String algorithm, int keySize, Class<? extends Key> keyClass)
             throws Exception {
@@ -214,6 +215,32 @@ public class KeyPairBuilderTest {
             () -> assertTrue(keyPair.getPublic() instanceof RSAKey),
             () -> assertEquals("RSA", keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals("RSA", keyPair.getPublic().getAlgorithm()),
+            () -> assertEquals(keySize, getSize(keyPair.getPrivate())),
+            () -> assertEquals(keySize, getSize(keyPair.getPublic()))
+        );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        " 512,  65537",
+        " 768,   4097",
+        "1024,    257",
+        "2048,     17",
+        "3072,      7",
+        "4096,      3"
+    })
+    public void testWithParamsRSASSA_PSS(int keySize, BigInteger publicExponent)
+            throws Exception {
+        KeyPair keyPair = new KeyPairBuilder()
+            .withAlgorithm("RSASSA-PSS")
+            .withParams(new RSAKeyGenParameterSpec(keySize, publicExponent))
+            .build();
+
+        assertAll(
+            () -> assertTrue(keyPair.getPrivate() instanceof RSAKey),
+            () -> assertTrue(keyPair.getPublic() instanceof RSAKey),
+            () -> assertEquals("RSASSA-PSS", keyPair.getPrivate().getAlgorithm()),
+            () -> assertEquals("RSASSA-PSS", keyPair.getPublic().getAlgorithm()),
             () -> assertEquals(keySize, getSize(keyPair.getPrivate())),
             () -> assertEquals(keySize, getSize(keyPair.getPublic()))
         );
