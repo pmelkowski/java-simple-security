@@ -71,13 +71,15 @@ public class KeyPairBuilder {
             keyGen = KeyPairGenerator.getInstance(
                     algorithm != null ? algorithm : Defaults.getKeyAlgorithm());
 
-            if (size == null) {
+            if ((size == null) && Defaults.getKeyAlgorithm().equalsIgnoreCase(keyGen.getAlgorithm())) {
                 size = Defaults.getKeySize();
             }
-            if (random != null) {
-                keyGen.initialize(size, random);
-            } else {
-                keyGen.initialize(size);
+            if (size != null) {
+                if (random != null) {
+                    keyGen.initialize(size, random);
+                } else {
+                    keyGen.initialize(size);
+                }
             }
         }
 

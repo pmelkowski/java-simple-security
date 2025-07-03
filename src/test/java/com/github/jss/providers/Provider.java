@@ -44,9 +44,11 @@ abstract public class Provider {
                     .invoke(null, algorithm, provider));
     }
 
-    public KeyPair getKeyPair(String algorithm, int keySize) throws Exception {
+    public KeyPair getKeyPair(String algorithm, Integer keySize) throws Exception {
         KeyPairGenerator keyGen = findService(KeyPairGenerator.class, algorithm);
-        keyGen.initialize(keySize);
+        if (keySize != null) {
+            keyGen.initialize(keySize);
+        }
         return keyGen.generateKeyPair();
     }
 

@@ -25,6 +25,9 @@ import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import sun.security.pkcs.NamedPKCS8Key;
+import sun.security.x509.NamedX509Key;
+
 public class KeyPairBuilderTest {
 
     @Test
@@ -65,6 +68,32 @@ public class KeyPairBuilderTest {
             () -> assertEquals(builder.algorithm, keyPair.getPublic().getAlgorithm()),
             () -> assertEquals(builder.size, getSize(keyPair.getPrivate())),
             () -> assertEquals(builder.size, getSize(keyPair.getPublic()))
+        );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "ML-DSA,       ML-DSA-65",
+        "ML-DSA-44,    ML-DSA-44",
+        "ML-DSA-65,    ML-DSA-65",
+        "ML-DSA-87,    ML-DSA-87",
+        "ML-KEM,       ML-KEM-768",
+        "ML-KEM-512,   ML-KEM-512",
+        "ML-KEM-768,   ML-KEM-768",
+        "ML-KEM-1024,  ML-KEM-1024"
+    })
+    public void testWithNamedAlgorithm(String algorithm, String parameter) throws Exception {
+        KeyPairBuilder builder = new KeyPairBuilder()
+            .withAlgorithm(algorithm);
+        KeyPair keyPair = builder.build();
+
+        assertAll(
+            () -> assertTrue(keyPair.getPrivate() instanceof NamedPKCS8Key),
+            () -> assertTrue(keyPair.getPublic() instanceof NamedX509Key),
+            () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPrivate().getAlgorithm()),
+            () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPublic().getAlgorithm()),
+            () -> assertEquals(parameter, ((NamedParameterSpec) keyPair.getPrivate().getParams()).getName()),
+            () -> assertEquals(parameter, ((NamedParameterSpec) keyPair.getPublic().getParams()).getName())
         );
     }
 

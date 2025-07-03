@@ -26,6 +26,7 @@ import sun.security.util.DerValue;
 final class KeyDecoder {
 
     static {
+        JavaBaseModule.addExports("sun.security.pkcs");
         JavaBaseModule.addExports("sun.security.util");
     }
 
@@ -87,6 +88,13 @@ final class KeyDecoder {
                 return decodePrivateKeyEC(val);
             case "RSA":
                 return decodePrivateKeyRSA(val);
+            case "ML-DSA-44":
+            case "ML-DSA-65":
+            case "ML-DSA-87":
+            case "ML-KEM-512":
+            case "ML-KEM-768":
+            case "ML-KEM-1024":
+                return decodeNamedPrivateKey(algorithm, val);
             default:
                 return Optional.empty();
             }
@@ -364,6 +372,35 @@ final class KeyDecoder {
                 return coeff;
             }
         });
+    }
+
+    private static Optional<PrivateKey> decodeNamedPrivateKey(String algorithm, DerValue val) throws IOException {
+        // Use reflection for NamedPKCS8Key added in JRE 24
+        Class<?> namedPKCS8Key = JavaBaseModule.getClass("sun.security.pkcs.NamedPKCS8Key");
+        if (namedPKCS8Key == null) {
+            return Optional.empty();
+        }
+
+        // version
+        val.data.getBigInteger();
+
+        // algorithm
+        val.data.getDerValue();
+
+        // key
+        byte[] raw = val.data.getOctetString();
+        if (raw[0] == DerValue.tag_OctetString) {
+            // Key with nested octet strings is properly handled by the Sun Provider
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of((PrivateKey) namedPKCS8Key.getConstructor(String.class, String.class, byte[].class)
+                    .newInstance(algorithm.substring(0, 6), algorithm, raw));
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+                | NoSuchMethodException e) {
+            return Optional.empty();
+        }
     }
 
     @SuppressWarnings("serial")

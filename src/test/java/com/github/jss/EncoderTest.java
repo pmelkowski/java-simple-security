@@ -24,6 +24,8 @@ public class EncoderTest {
         "BC,  EC,      384",
         "BC,  EdDSA,   255",
         "BC,  EdDSA,   448",
+        "BC,  ML-DSA,     ",
+        "BC,  ML-KEM,     ",
         "BC,  RSA,    4096",
         "BC,  X25519,  255",
         "BC,  X448,    448",
@@ -34,6 +36,8 @@ public class EncoderTest {
         "SUN, EC,      384",
         "SUN, EdDSA,   255",
         "SUN, EdDSA,   448",
+        "SUN, ML-DSA,     ",
+        "SUN, ML-KEM,     ",
         "SUN, RSA,    4096",
         "SUN, X25519,  255",
         "SUN, X448,    448",
@@ -41,7 +45,7 @@ public class EncoderTest {
         "SUN, XDH,     448"
     })
     public void testEncodeKey(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize) throws Exception {
+            String algorithm, Integer keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
         String encodedPrivate = Encoder.encode(keyPair.getPrivate());
@@ -64,6 +68,8 @@ public class EncoderTest {
         "BC,  EC,      384",
         "BC,  EdDSA,   255",
         "BC,  EdDSA,   448",
+        "BC,  ML-DSA,     ",
+        "BC,  ML-KEM,     ",
         "BC,  RSA,    4096",
         "BC,  X25519,  255",
         "BC,  X448,    448",
@@ -71,7 +77,7 @@ public class EncoderTest {
         "BC,  XDH,     448"
     })
     public void testEncodeKeyToPEM(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize) throws Exception {
+            String algorithm, Integer keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
         String pemPrivate = Encoder.encodeToPEM(keyPair.getPrivate());

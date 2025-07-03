@@ -9,6 +9,10 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.temporal.ChronoUnit;
 
+import org.bouncycastle.jcajce.interfaces.MLDSAPrivateKey;
+import org.bouncycastle.jcajce.interfaces.MLDSAPublicKey;
+import org.bouncycastle.jcajce.interfaces.MLKEMPrivateKey;
+import org.bouncycastle.jcajce.interfaces.MLKEMPublicKey;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -22,41 +26,60 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPrivateKey",
         "BC,  EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "BC,  Ed25519,     255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  Ed448,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  ML-DSA,         , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-44,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-65,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-87,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM,         , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-512,     , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-768,     , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-1024,    , sun.security.pkcs.NamedPKCS8Key",
         "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
-        "BC,  X25519,      255, sun.security.ec.XDHPrivateKeyImpl",
-        "BC,  X448,        448, sun.security.ec.XDHPrivateKeyImpl",
+        "BC,  X25519,         , sun.security.ec.XDHPrivateKeyImpl",
+        "BC,  X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl",
         "SUN, DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "SUN, DSA,        1024, sun.security.provider.DSAPrivateKey",
         "SUN, EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "SUN, Ed25519,     255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, Ed448,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, ML-DSA,         , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-DSA-44,      , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-DSA-65,      , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-DSA-87,      , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM,         , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM-512,     , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM-768,     , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM-1024,    , sun.security.pkcs.NamedPKCS8Key",
         "SUN, RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
-        "SUN, X25519,      255, sun.security.ec.XDHPrivateKeyImpl",
-        "SUN, X448,        448, sun.security.ec.XDHPrivateKeyImpl",
+        "SUN, X25519,         , sun.security.ec.XDHPrivateKeyImpl",
+        "SUN, X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPrivateKeyImpl"
     })
     public void testDecodePrivateKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize, Class<?> keyClass) throws Exception {
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
         String encodedPrivate = provider.encodeKey(keyPair.getPrivate());
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
 
-        assertAll(
-            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertEquals(keyClass, decodedPrivate.getClass())
-        );
+        assertEquals(keyClass, decodedPrivate.getClass());
+        if ((keyPair.getPrivate() instanceof MLDSAPrivateKey)
+                || (keyPair.getPrivate() instanceof MLKEMPrivateKey)) {
+            // waiting for better equals()
+        } else {
+            assertEquals(keyPair.getPrivate(), decodedPrivate);
+        }
     }
 
     @SuppressWarnings("exports")
@@ -65,28 +88,39 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPrivateKey",
         "BC,  EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "BC,  Ed25519,     255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  Ed448,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  ML-DSA,         , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-44,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-65,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-87,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM,         , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-512,     , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-768,     , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-1024,    , sun.security.pkcs.NamedPKCS8Key",
         "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
-        "BC,  X25519,      255, sun.security.ec.XDHPrivateKeyImpl",
-        "BC,  X448,        448, sun.security.ec.XDHPrivateKeyImpl",
+        "BC,  X25519,         , sun.security.ec.XDHPrivateKeyImpl",
+        "BC,  X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
-        "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl"
+        "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl",
     })
     public void testDecodePrivateKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize, Class<?> keyClass) throws Exception {
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
         String pemPrivate = provider.encodeToPEM(keyPair.getPrivate());
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(pemPrivate);
 
-        assertAll(
-            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertEquals(keyClass, decodedPrivate.getClass())
-        );
+        assertEquals(keyClass, decodedPrivate.getClass());
+        if ((keyPair.getPrivate() instanceof MLDSAPrivateKey)
+                || (keyPair.getPrivate() instanceof MLKEMPrivateKey)) {
+            // waiting for better equals()
+        } else {
+            assertEquals(keyPair.getPrivate(), decodedPrivate);
+        }
     }
 
     @SuppressWarnings("exports")
@@ -95,41 +129,60 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPrivateKey",
         "BC,  EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "BC,  Ed25519,     255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  Ed448,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  ML-DSA,         , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-44,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-65,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-DSA-87,      , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM,         , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-512,     , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-768,     , sun.security.pkcs.NamedPKCS8Key",
+        "BC,  ML-KEM-1024,    , sun.security.pkcs.NamedPKCS8Key",
         "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
-        "BC,  X25519,      255, sun.security.ec.XDHPrivateKeyImpl",
-        "BC,  X448,        448, sun.security.ec.XDHPrivateKeyImpl",
+        "BC,  X25519,         , sun.security.ec.XDHPrivateKeyImpl",
+        "BC,  X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl",
         "SUN, DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "SUN, DSA,        1024, sun.security.provider.DSAPrivateKey",
         "SUN, EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "SUN, Ed25519,     255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, Ed448,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, ML-DSA,         , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-DSA-44,      , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-DSA-65,      , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-DSA-87,      , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM,         , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM-512,     , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM-768,     , sun.security.pkcs.NamedPKCS8Key",
+        "SUN, ML-KEM-1024,    , sun.security.pkcs.NamedPKCS8Key",
         "SUN, RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
-        "SUN, X25519,      255, sun.security.ec.XDHPrivateKeyImpl",
-        "SUN, X448,        448, sun.security.ec.XDHPrivateKeyImpl",
+        "SUN, X25519,         , sun.security.ec.XDHPrivateKeyImpl",
+        "SUN, X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPrivateKeyImpl"
     })
     public void testDecodePrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize, Class<?> keyClass) throws Exception {
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
         byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
 
-        assertAll(
-            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertEquals(keyClass, decodedPrivate.getClass())
-        );
+        assertEquals(keyClass, decodedPrivate.getClass());
+        if ((keyPair.getPrivate() instanceof MLDSAPrivateKey)
+                || (keyPair.getPrivate() instanceof MLKEMPrivateKey)) {
+            // waiting for better equals()
+        } else {
+            assertEquals(keyPair.getPrivate(), decodedPrivate);
+        }
     }
 
     @SuppressWarnings("exports")
@@ -138,41 +191,60 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "BC,  EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "BC,  Ed25519,     255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  Ed448,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  ML-DSA,         , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-44,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-65,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-87,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM,         , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-512,     , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-768,     , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-1024,    , sun.security.x509.NamedX509Key",
         "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
-        "BC,  X25519,      255, sun.security.ec.XDHPublicKeyImpl",
-        "BC,  X448,        448, sun.security.ec.XDHPublicKeyImpl",
+        "BC,  X25519,         , sun.security.ec.XDHPublicKeyImpl",
+        "BC,  X448,           , sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPublicKeyImpl",
         "SUN, DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "SUN, DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "SUN, EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "SUN, Ed25519,     255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, Ed448,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
         "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, ML-DSA,         , sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-44,      , sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-65,      , sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-87,      , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM,         , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-512,     , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-768,     , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-1024,    , sun.security.x509.NamedX509Key",
         "SUN, RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
-        "SUN, X25519,      255, sun.security.ec.XDHPublicKeyImpl",
-        "SUN, X448,        448, sun.security.ec.XDHPublicKeyImpl",
+        "SUN, X25519,         , sun.security.ec.XDHPublicKeyImpl",
+        "SUN, X448,           , sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPublicKeyImpl"
     })
     public void testDecodePublicKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize, Class<?> keyClass) throws Exception {
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
         String encodedPublic = provider.encodeKey(keyPair.getPublic());
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
 
-        assertAll(
-            () -> assertEquals(keyPair.getPublic(), decodedPublic),
-            () -> assertEquals(keyClass, decodedPublic.getClass())
-        );
+        assertEquals(keyClass, decodedPublic.getClass());
+        if ((keyPair.getPublic() instanceof MLDSAPublicKey)
+                || (keyPair.getPublic() instanceof MLKEMPublicKey)) {
+            // waiting for better equals()
+        } else {
+            assertEquals(keyPair.getPublic(), decodedPublic);
+        }
     }
 
     @SuppressWarnings("exports")
@@ -181,28 +253,39 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "BC,  EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "BC,  Ed25519,     255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  Ed448,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  ML-DSA,         , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-44,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-65,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-87,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM,         , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-512,     , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-768,     , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-1024,    , sun.security.x509.NamedX509Key",
         "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
-        "BC,  X25519,      255, sun.security.ec.XDHPublicKeyImpl",
-        "BC,  X448,        448, sun.security.ec.XDHPublicKeyImpl",
+        "BC,  X25519,         , sun.security.ec.XDHPublicKeyImpl",
+        "BC,  X448,           , sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPublicKeyImpl"
     })
     public void testDecodePublicKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize, Class<?> keyClass) throws Exception {
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
         String pemPublic = provider.encodeToPEM(keyPair.getPublic());
 
         PublicKey decodedPublic = Decoder.decodePublicKey(pemPublic);
 
-        assertAll(
-            () -> assertEquals(keyPair.getPublic(), decodedPublic),
-            () -> assertEquals(keyClass, decodedPublic.getClass())
-        );
+        assertEquals(keyClass, decodedPublic.getClass());
+        if ((keyPair.getPublic() instanceof MLDSAPublicKey)
+                || (keyPair.getPublic() instanceof MLKEMPublicKey)) {
+            // waiting for better equals()
+        } else {
+            assertEquals(keyPair.getPublic(), decodedPublic);
+        }
     }
 
     @SuppressWarnings("exports")
@@ -211,41 +294,60 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "BC,  EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "BC,  Ed25519,     255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  Ed448,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  ML-DSA,         , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-44,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-65,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-87,      , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM,         , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-512,     , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-768,     , sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-1024,    , sun.security.x509.NamedX509Key",
         "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
-        "BC,  X25519,      255, sun.security.ec.XDHPublicKeyImpl",
-        "BC,  X448,        448, sun.security.ec.XDHPublicKeyImpl",
+        "BC,  X25519,         , sun.security.ec.XDHPublicKeyImpl",
+        "BC,  X448,           , sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPublicKeyImpl",
         "SUN, DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "SUN, DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "SUN, EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "SUN, Ed25519,     255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, Ed448,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
         "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, ML-DSA,         , sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-44,      , sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-65,      , sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-87,      , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM,         , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-512,     , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-768,     , sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-1024,    , sun.security.x509.NamedX509Key",
         "SUN, RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
-        "SUN, X25519,      255, sun.security.ec.XDHPublicKeyImpl",
-        "SUN, X448,        448, sun.security.ec.XDHPublicKeyImpl",
+        "SUN, X25519,         , sun.security.ec.XDHPublicKeyImpl",
+        "SUN, X448,           , sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPublicKeyImpl"
     })
     public void testDecodePublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
-            String algorithm, int keySize, Class<?> keyClass) throws Exception {
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
         byte[] encodedPublic = keyPair.getPublic().getEncoded();
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
 
-        assertAll(
-            () -> assertEquals(keyPair.getPublic(), decodedPublic),
-            () -> assertEquals(keyClass, decodedPublic.getClass())
-        );
+        assertEquals(keyClass, decodedPublic.getClass());
+        if ((keyPair.getPublic() instanceof MLDSAPublicKey)
+                || (keyPair.getPublic() instanceof MLKEMPublicKey)) {
+            // waiting for better equals()
+        } else {
+            assertEquals(keyPair.getPublic(), decodedPublic);
+        }
     }
 
     @SuppressWarnings("exports")
