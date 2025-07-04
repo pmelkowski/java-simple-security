@@ -22,14 +22,20 @@ import javax.crypto.spec.DHParameterSpec;
 
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
+import sun.security.x509.AlgorithmId;
 
 final class KeyDecoder {
 
     static {
         JavaBaseModule.addExports("sun.security.pkcs");
         JavaBaseModule.addExports("sun.security.util");
+        JavaBaseModule.addExports("sun.security.x509");
     }
 
+    /*
+     * This method is needed because JDK can't decode algorithm of DH keys
+     * encoded by BC.
+     */
     static Optional<String> decodeAlgorithm(byte[] encoded) {
         try {
             DerValue val = new DerValue(encoded);
@@ -46,26 +52,10 @@ final class KeyDecoder {
             if (derAlgorithm.tag != DerValue.tag_Sequence) {
                 return Optional.empty();
             }
-            DerInputStream delAlgInStream = derAlgorithm.toDerInputStream();
 
             // algorithm.OID
-            String oid = delAlgInStream.getOID().toString();
-
-            // Use reflection for KnownOIDs added in JRE 11
-            Class<?> knownOIDs = JavaBaseModule.getClass("sun.security.util.KnownOIDs");
-            if (knownOIDs != null) {
-                try {
-                    Object found = knownOIDs.getMethod("findMatch", String.class).invoke(null, oid);
-                    if (found == null) {
-                        return Optional.empty();
-                    }
-                    return Optional.of(((String) knownOIDs.getMethod("stdName").invoke(found)).toUpperCase());
-                } catch (SecurityException | IllegalAccessException | InvocationTargetException
-                        | NoSuchMethodException e) {
-                }
-            }
-
-            return Algorithms.findByOid(oid);
+            return Optional.of(new AlgorithmId(derAlgorithm.toDerInputStream().getOID())
+                    .getName().toUpperCase());
         } catch (IOException e) {
             return Optional.empty();
         }
