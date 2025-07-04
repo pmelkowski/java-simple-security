@@ -54,8 +54,9 @@ final class KeyDecoder {
             }
 
             // algorithm.OID
-            return Optional.of(new AlgorithmId(derAlgorithm.toDerInputStream().getOID())
-                    .getName().toUpperCase());
+            return Optional.of(new AlgorithmId(derAlgorithm.toDerInputStream().getOID()))
+                    .map(AlgorithmId::getName)
+                    .map(String::toUpperCase);
         } catch (IOException e) {
             return Optional.empty();
         }
@@ -81,10 +82,11 @@ final class KeyDecoder {
             case "ML-DSA-44":
             case "ML-DSA-65":
             case "ML-DSA-87":
+                return decodeNamedPrivateKey("ML-DSA", algorithm, val);
             case "ML-KEM-512":
             case "ML-KEM-768":
             case "ML-KEM-1024":
-                return decodeNamedPrivateKey(algorithm, val);
+                return decodeNamedPrivateKey("ML-KEM", algorithm, val);
             default:
                 return Optional.empty();
             }
@@ -364,7 +366,8 @@ final class KeyDecoder {
         });
     }
 
-    private static Optional<PrivateKey> decodeNamedPrivateKey(String algorithm, DerValue val) throws IOException {
+    private static Optional<PrivateKey> decodeNamedPrivateKey(String algorithm, String parameter, DerValue val)
+            throws IOException {
         // Use reflection for NamedPKCS8Key added in JRE 24
         Class<?> namedPKCS8Key = JavaBaseModule.getClass("sun.security.pkcs.NamedPKCS8Key");
         if (namedPKCS8Key == null) {
@@ -386,7 +389,7 @@ final class KeyDecoder {
 
         try {
             return Optional.of((PrivateKey) namedPKCS8Key.getConstructor(String.class, String.class, byte[].class)
-                    .newInstance(algorithm.substring(0, 6), algorithm, raw));
+                    .newInstance(algorithm, parameter, raw));
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
                 | NoSuchMethodException e) {
             return Optional.empty();
