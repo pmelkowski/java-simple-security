@@ -68,17 +68,16 @@ public class DecoderTest {
     })
     public void testDecodePrivateKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-        String encodedPrivate = provider.encodeKey(keyPair.getPrivate());
+        PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
+        String encodedPrivate = provider.encodeKey(privateKey);
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
 
         assertEquals(keyClass, decodedPrivate.getClass());
-        if ((keyPair.getPrivate() instanceof MLDSAPrivateKey)
-                || (keyPair.getPrivate() instanceof MLKEMPrivateKey)) {
+        if ((privateKey instanceof MLDSAPrivateKey) || (privateKey instanceof MLKEMPrivateKey)) {
             // waiting for better equals()
         } else {
-            assertEquals(keyPair.getPrivate(), decodedPrivate);
+            assertEquals(privateKey, decodedPrivate);
         }
     }
 
@@ -109,17 +108,16 @@ public class DecoderTest {
     })
     public void testDecodePrivateKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-        String pemPrivate = provider.encodeToPEM(keyPair.getPrivate());
+        PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
+        String pemPrivate = provider.encodeToPEM(privateKey);
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(pemPrivate);
 
         assertEquals(keyClass, decodedPrivate.getClass());
-        if ((keyPair.getPrivate() instanceof MLDSAPrivateKey)
-                || (keyPair.getPrivate() instanceof MLKEMPrivateKey)) {
+        if ((privateKey instanceof MLDSAPrivateKey) || (privateKey instanceof MLKEMPrivateKey)) {
             // waiting for better equals()
         } else {
-            assertEquals(keyPair.getPrivate(), decodedPrivate);
+            assertEquals(privateKey, decodedPrivate);
         }
     }
 
@@ -171,17 +169,16 @@ public class DecoderTest {
     })
     public void testDecodePrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-        byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
+        PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
+        byte[] encodedPrivate = privateKey.getEncoded();
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
 
         assertEquals(keyClass, decodedPrivate.getClass());
-        if ((keyPair.getPrivate() instanceof MLDSAPrivateKey)
-                || (keyPair.getPrivate() instanceof MLKEMPrivateKey)) {
+        if ((privateKey instanceof MLDSAPrivateKey) || (privateKey instanceof MLKEMPrivateKey)) {
             // waiting for better equals()
         } else {
-            assertEquals(keyPair.getPrivate(), decodedPrivate);
+            assertEquals(privateKey, decodedPrivate);
         }
     }
 
@@ -233,17 +230,16 @@ public class DecoderTest {
     })
     public void testDecodePublicKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-        String encodedPublic = provider.encodeKey(keyPair.getPublic());
+        PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
+        String encodedPublic = provider.encodeKey(publicKey);
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
 
         assertEquals(keyClass, decodedPublic.getClass());
-        if ((keyPair.getPublic() instanceof MLDSAPublicKey)
-                || (keyPair.getPublic() instanceof MLKEMPublicKey)) {
+        if ((publicKey instanceof MLDSAPublicKey) || (publicKey instanceof MLKEMPublicKey)) {
             // waiting for better equals()
         } else {
-            assertEquals(keyPair.getPublic(), decodedPublic);
+            assertEquals(publicKey, decodedPublic);
         }
     }
 
@@ -274,17 +270,16 @@ public class DecoderTest {
     })
     public void testDecodePublicKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-        String pemPublic = provider.encodeToPEM(keyPair.getPublic());
+        PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
+        String pemPublic = provider.encodeToPEM(publicKey);
 
         PublicKey decodedPublic = Decoder.decodePublicKey(pemPublic);
 
         assertEquals(keyClass, decodedPublic.getClass());
-        if ((keyPair.getPublic() instanceof MLDSAPublicKey)
-                || (keyPair.getPublic() instanceof MLKEMPublicKey)) {
+        if ((publicKey instanceof MLDSAPublicKey) || (publicKey instanceof MLKEMPublicKey)) {
             // waiting for better equals()
         } else {
-            assertEquals(keyPair.getPublic(), decodedPublic);
+            assertEquals(publicKey, decodedPublic);
         }
     }
 
@@ -336,17 +331,16 @@ public class DecoderTest {
     })
     public void testDecodePublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-        byte[] encodedPublic = keyPair.getPublic().getEncoded();
+        PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
+        byte[] encodedPublic = publicKey.getEncoded();
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
 
         assertEquals(keyClass, decodedPublic.getClass());
-        if ((keyPair.getPublic() instanceof MLDSAPublicKey)
-                || (keyPair.getPublic() instanceof MLKEMPublicKey)) {
+        if ((publicKey instanceof MLDSAPublicKey) || (publicKey instanceof MLKEMPublicKey)) {
             // waiting for better equals()
         } else {
-            assertEquals(keyPair.getPublic(), decodedPublic);
+            assertEquals(publicKey, decodedPublic);
         }
     }
 
