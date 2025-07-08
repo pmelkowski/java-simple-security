@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.DSAKey;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.ECKey;
@@ -20,13 +22,11 @@ import java.security.spec.RSAKeyGenParameterSpec;
 import javax.crypto.interfaces.DHKey;
 import javax.crypto.spec.DHParameterSpec;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import sun.security.pkcs.NamedPKCS8Key;
-import sun.security.x509.NamedX509Key;
 
 public class KeyPairBuilderTest {
 
@@ -71,25 +71,28 @@ public class KeyPairBuilderTest {
         );
     }
 
+    @EnabledForJreRange(minVersion = 24)
     @ParameterizedTest
     @CsvSource({
-        "ML-DSA,       ML-DSA-65",
-        "ML-DSA-44,    ML-DSA-44",
-        "ML-DSA-65,    ML-DSA-65",
-        "ML-DSA-87,    ML-DSA-87",
-        "ML-KEM,       ML-KEM-768",
-        "ML-KEM-512,   ML-KEM-512",
-        "ML-KEM-768,   ML-KEM-768",
-        "ML-KEM-1024,  ML-KEM-1024"
+        "ML-DSA,       ML-DSA-65,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-DSA-44,    ML-DSA-44,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-DSA-65,    ML-DSA-65,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-DSA-87,    ML-DSA-87,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-KEM,       ML-KEM-768,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-KEM-512,   ML-KEM-512,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-KEM-768,   ML-KEM-768,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
+        "ML-KEM-1024,  ML-KEM-1024,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key"
     })
-    public void testWithNamedAlgorithm(String algorithm, String parameter) throws Exception {
+    public void testWithNamedAlgorithm(String algorithm, String parameter,
+            Class<? extends PrivateKey> privateKeyClass, Class<? extends PublicKey> publicKeyClass)
+                    throws Exception {
         KeyPairBuilder builder = new KeyPairBuilder()
             .withAlgorithm(algorithm);
         KeyPair keyPair = builder.build();
 
         assertAll(
-            () -> assertTrue(keyPair.getPrivate() instanceof NamedPKCS8Key),
-            () -> assertTrue(keyPair.getPublic() instanceof NamedX509Key),
+            () -> assertTrue(privateKeyClass.isAssignableFrom(keyPair.getPrivate().getClass())),
+            () -> assertTrue(publicKeyClass.isAssignableFrom(keyPair.getPublic().getClass())),
             () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPublic().getAlgorithm()),
             () -> assertEquals(parameter, ((NamedParameterSpec) keyPair.getPrivate().getParams()).getName()),

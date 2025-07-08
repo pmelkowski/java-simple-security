@@ -8,7 +8,7 @@ group "com.github"
 version "1.0-SNAPSHOT"
 
 def projectUrl = "https://github.com/pmelkowski/java-simple-security"
-def junitVersion = "5.8.1"
+def junitVersion = "5.13.3"
 def bouncyCastleVersion = "1.80"
 
 sourceCompatibility = "1.9"

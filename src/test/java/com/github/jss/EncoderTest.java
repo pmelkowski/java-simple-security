@@ -9,40 +9,51 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.temporal.ChronoUnit;
 
+import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
 import com.github.jss.providers.Provider;
 
+@SuppressWarnings("exports")
 public class EncoderTest {
 
-    @SuppressWarnings("exports")
     @ParameterizedTest
     @CsvSource({
-        "BC,  DH,     2048",
-        "BC,  DSA,    1024",
-        "BC,  EC,      384",
-        "BC,  EdDSA,   255",
-        "BC,  EdDSA,   448",
-        "BC,  ML-DSA,     ",
-        "BC,  ML-KEM,     ",
-        "BC,  RSA,    4096",
-        "BC,  X25519,  255",
-        "BC,  X448,    448",
-        "BC,  XDH,     255",
-        "BC,  XDH,     448",
-        "SUN, DH,     2048",
-        "SUN, DSA,    1024",
-        "SUN, EC,      384",
-        "SUN, EdDSA,   255",
-        "SUN, EdDSA,   448",
-        "SUN, ML-DSA,     ",
-        "SUN, ML-KEM,     ",
-        "SUN, RSA,    4096",
-        "SUN, X25519,  255",
-        "SUN, X448,    448",
-        "SUN, XDH,     255",
-        "SUN, XDH,     448"
+        "BC,  DH,           2048",
+        "BC,  DSA,          1024",
+        "BC,  EC,            384",
+        "BC,  Ed25519,          ",
+        "BC,  Ed448,            ",
+        "BC,  EdDSA,         255",
+        "BC,  EdDSA,         448",
+        "BC,  ML-DSA,           ",
+        "BC,  ML-DSA-44,        ",
+        "BC,  ML-DSA-65,        ",
+        "BC,  ML-DSA-87,        ",
+        "BC,  ML-KEM,           ",
+        "BC,  ML-KEM-512,       ",
+        "BC,  ML-KEM-768,       ",
+        "BC,  ML-KEM-1024,      ",
+        "BC,  RSA,          4096",
+        "BC,  RSASSA-PSS,   3072",
+        "BC,  X25519,           ",
+        "BC,  X448,             ",
+        "BC,  XDH,           255",
+        "BC,  XDH,           448",
+        "SUN, DH,           2048",
+        "SUN, DSA,          1024",
+        "SUN, EC,            384",
+        "SUN, Ed25519,          ",
+        "SUN, Ed448,            ",
+        "SUN, EdDSA,         255",
+        "SUN, EdDSA,         448",
+        "SUN, RSA,          4096",
+        "SUN, RSASSA-PSS,   3072",
+        "SUN, X25519,           ",
+        "SUN, X448,             ",
+        "SUN, XDH,           255",
+        "SUN, XDH,           448"
     })
     public void testEncodeKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize) throws Exception {
@@ -60,21 +71,57 @@ public class EncoderTest {
         );
     }
 
-    @SuppressWarnings("exports")
+    @EnabledForJreRange(minVersion = 24)
     @ParameterizedTest
     @CsvSource({
-        "BC,  DH,     2048",
-        "BC,  DSA,    1024",
-        "BC,  EC,      384",
-        "BC,  EdDSA,   255",
-        "BC,  EdDSA,   448",
-        "BC,  ML-DSA,     ",
-        "BC,  ML-KEM,     ",
-        "BC,  RSA,    4096",
-        "BC,  X25519,  255",
-        "BC,  X448,    448",
-        "BC,  XDH,     255",
-        "BC,  XDH,     448"
+        "SUN, ML-DSA",
+        "SUN, ML-DSA-44",
+        "SUN, ML-DSA-65",
+        "SUN, ML-DSA-87",
+        "SUN, ML-KEM",
+        "SUN, ML-KEM-512",
+        "SUN, ML-KEM-768",
+        "SUN, ML-KEM-1024"
+    })
+    public void testEncodeNamedKey(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm) throws Exception {
+        KeyPair keyPair = provider.getKeyPair(algorithm, null);
+
+        String encodedPrivate = Encoder.encode(keyPair.getPrivate());
+        String encodedPublic = Encoder.encode(keyPair.getPublic());
+
+        PrivateKey decodedPrivate = provider.decodePrivateKey(algorithm, encodedPrivate);
+        PublicKey decodedPublic = provider.decodePublicKey(algorithm, encodedPublic);
+
+        assertAll(
+            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
+            () -> assertEquals(keyPair.getPublic(), decodedPublic)
+        );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  DH,           2048",
+        "BC,  DSA,          1024",
+        "BC,  EC,            384",
+        "BC,  Ed25519,          ",
+        "BC,  Ed448,            ",
+        "BC,  EdDSA,         255",
+        "BC,  EdDSA,         448",
+        "BC,  ML-DSA,           ",
+        "BC,  ML-DSA-44,        ",
+        "BC,  ML-DSA-65,        ",
+        "BC,  ML-DSA-87,        ",
+        "BC,  ML-KEM,           ",
+        "BC,  ML-KEM-512,       ",
+        "BC,  ML-KEM-768,       ",
+        "BC,  ML-KEM-1024,      ",
+        "BC,  RSA,          4096",
+        "BC,  RSASSA-PSS,   3072",
+        "BC,  X25519,           ",
+        "BC,  X448,             ",
+        "BC,  XDH,           255",
+        "BC,  XDH,           448"
     })
     public void testEncodeKeyToPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize) throws Exception {
@@ -92,7 +139,6 @@ public class EncoderTest {
         );
     }
 
-    @SuppressWarnings("exports")
     @ParameterizedTest
     @CsvSource({
         "BC,  RSA, 4096, 0,  1, WEEKS,  000000000, MD5",
@@ -123,7 +169,6 @@ public class EncoderTest {
         );
     }
 
-    @SuppressWarnings("exports")
     @ParameterizedTest
     @CsvSource({
         "BC,  RSA, 4096, 0,  1, WEEKS,  000000000, MD5",
