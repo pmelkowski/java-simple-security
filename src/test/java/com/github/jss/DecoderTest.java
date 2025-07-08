@@ -408,22 +408,22 @@ public class DecoderTest {
     @EnabledForJreRange(minVersion = 24)
     @ParameterizedTest
     @CsvSource({
-        "BC,  ML-DSA,         , sun.security.x509.NamedX509Key",
-        "BC,  ML-DSA-44,      , sun.security.x509.NamedX509Key",
-        "BC,  ML-DSA-65,      , sun.security.x509.NamedX509Key",
-        "BC,  ML-DSA-87,      , sun.security.x509.NamedX509Key",
-        "BC,  ML-KEM,         , sun.security.x509.NamedX509Key",
-        "BC,  ML-KEM-512,     , sun.security.x509.NamedX509Key",
-        "BC,  ML-KEM-768,     , sun.security.x509.NamedX509Key",
-        "BC,  ML-KEM-1024,    , sun.security.x509.NamedX509Key",
-        "SUN, ML-DSA,         , sun.security.x509.NamedX509Key",
-        "SUN, ML-DSA-44,      , sun.security.x509.NamedX509Key",
-        "SUN, ML-DSA-65,      , sun.security.x509.NamedX509Key",
-        "SUN, ML-DSA-87,      , sun.security.x509.NamedX509Key",
-        "SUN, ML-KEM,         , sun.security.x509.NamedX509Key",
-        "SUN, ML-KEM-512,     , sun.security.x509.NamedX509Key",
-        "SUN, ML-KEM-768,     , sun.security.x509.NamedX509Key",
-        "SUN, ML-KEM-1024,    , sun.security.x509.NamedX509Key"
+        "BC,  ML-DSA,       sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-44,    sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-65,    sun.security.x509.NamedX509Key",
+        "BC,  ML-DSA-87,    sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM,       sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-512,   sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-768,   sun.security.x509.NamedX509Key",
+        "BC,  ML-KEM-1024,  sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA,       sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-44,    sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-65,    sun.security.x509.NamedX509Key",
+        "SUN, ML-DSA-87,    sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM,       sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-512,   sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-768,   sun.security.x509.NamedX509Key",
+        "SUN, ML-KEM-1024,  sun.security.x509.NamedX509Key"
     })
     public void testDecodeNamedPublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Class<?> keyClass) throws Exception {
