@@ -3,6 +3,7 @@ package com.github.jss;
 import java.security.KeyPairGenerator;
 import java.security.Provider;
 import java.security.Security;
+import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,10 @@ public class Algorithms {
         return getAlgorithms(KeyPairGenerator.class.getSimpleName());
     }
 
+    public static List<String> getSignatureAlgorithms() {
+        return getAlgorithms(Signature.class.getSimpleName());
+    }
+
     public static List<String> getAlgorithms(String serviceType) {
         return Security.getAlgorithms(serviceType).stream()
             .collect(Collectors.toList());
@@ -30,6 +35,10 @@ public class Algorithms {
 
     public static List<String> getKeyProviderNames(String algorithm) {
         return getProviderNames(KeyPairGenerator.class.getSimpleName(), algorithm);
+    }
+
+    public static List<String> getSignatureProviderNames(String algorithm) {
+        return getProviderNames(Signature.class.getSimpleName(), algorithm);
     }
 
     public static List<String> getProviderNames(String serviceType, String algorithm) {
