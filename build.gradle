@@ -8,15 +8,15 @@ group "com.github"
 version "1.0-SNAPSHOT"
 
 def projectUrl = "https://github.com/pmelkowski/java-simple-security"
-def junitVersion = "5.13.3"
-def bouncyCastleVersion = "1.80"
+def junitVersion = "5.14.4"
+def bouncyCastleVersion = "1.84"
 
 sourceCompatibility = "1.9"
 targetCompatibility = "1.9"
 compileJava.options.encoding = "UTF-8"
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 java {
