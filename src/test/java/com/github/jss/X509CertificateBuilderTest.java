@@ -16,10 +16,13 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
+import java.util.List;
+
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class X509CertificateBuilderTest {
     protected static final X500Principal SUBJECT =
@@ -52,6 +55,7 @@ public class X509CertificateBuilderTest {
             () -> assertNotNull(certificate.getNotBefore()),
             () -> assertNotNull(certificate.getNotAfter()),
             () -> assertNotNull(certificate.getSerialNumber()),
+            () -> assertDoesNotThrow(() -> certificate.verify(ISSUER_KEYS.getPublic())),
             () -> assertDoesNotThrow(() -> certificate.checkValidity())
         );
     }
@@ -69,6 +73,7 @@ public class X509CertificateBuilderTest {
             () -> assertNotNull(certificate.getNotBefore()),
             () -> assertNotNull(certificate.getNotAfter()),
             () -> assertNotNull(certificate.getSerialNumber()),
+            () -> assertDoesNotThrow(() -> certificate.verify(SUBJECT_KEYS.getPublic())),
             () -> assertDoesNotThrow(() -> certificate.checkValidity())
         );
     }
@@ -90,6 +95,7 @@ public class X509CertificateBuilderTest {
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),
+            () -> assertDoesNotThrow(() -> certificate.verify(ISSUER_KEYS.getPublic())),
             () -> assertDoesNotThrow(() -> certificate.checkValidity())
         );
     }
@@ -103,6 +109,7 @@ public class X509CertificateBuilderTest {
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),
+            () -> assertDoesNotThrow(() -> certificate.verify(ISSUER_KEYS.getPublic())),
             () -> assertThrows(CertificateExpiredException.class, () -> certificate.checkValidity())
         );
     }
@@ -115,7 +122,22 @@ public class X509CertificateBuilderTest {
         X509Certificate certificate = builder.build();
         assertAll(
             () -> commonChecks(builder, certificate),
+            () -> assertDoesNotThrow(() -> certificate.verify(ISSUER_KEYS.getPublic())),
             () -> assertThrows(CertificateNotYetValidException.class, () -> certificate.checkValidity())
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("getRsaSigningAlgorithms")
+    public void testSignatures(String signingAlgorithm) throws Exception {
+        X509CertificateBuilder builder = new X509CertificateBuilder(
+                SUBJECT.getName(), ISSUER.getName(), SUBJECT_KEYS.getPublic(), ISSUER_KEYS.getPrivate())
+            .withSigningAlgorithm(signingAlgorithm);
+        X509Certificate certificate = builder.build();
+        assertAll(
+            () -> commonChecks(builder, certificate),
+            () -> assertDoesNotThrow(() -> certificate.verify(ISSUER_KEYS.getPublic())),
+            () -> assertDoesNotThrow(() -> certificate.checkValidity())
         );
     }
 
@@ -130,6 +152,13 @@ public class X509CertificateBuilderTest {
             () -> assertEquals(Date.from(builder.notAfter), certificate.getNotAfter()),
             () -> assertEquals(builder.serialNumber, certificate.getSerialNumber())
         );
+    }
+
+    private static List<String> getRsaSigningAlgorithms() {
+        return Algorithms.getSignatureAlgorithms().stream()
+            .filter(algorithm -> Algorithms.getSignatureProviderNames(algorithm)
+                    .contains("SunRsaSign"))
+            .toList();
     }
 
 }

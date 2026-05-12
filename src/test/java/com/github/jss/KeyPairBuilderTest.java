@@ -3,6 +3,8 @@ package com.github.jss;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyPair;
@@ -95,8 +97,12 @@ public class KeyPairBuilderTest {
             () -> assertTrue(publicKeyClass.isAssignableFrom(keyPair.getPublic().getClass())),
             () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPublic().getAlgorithm()),
-            () -> assertEquals(parameter, ((NamedParameterSpec) keyPair.getPrivate().getParams()).getName()),
-            () -> assertEquals(parameter, ((NamedParameterSpec) keyPair.getPublic().getParams()).getName())
+
+            // Use reflection to compile in various JRE versions (getParams() present since 22)
+            () -> assertEquals(parameter, ((NamedParameterSpec) privateKeyClass.getMethod("getParams")
+                    .invoke(keyPair.getPrivate())).getName()),
+            () -> assertEquals(parameter, ((NamedParameterSpec) publicKeyClass.getMethod("getParams")
+                    .invoke(keyPair.getPublic())).getName())
         );
     }
 

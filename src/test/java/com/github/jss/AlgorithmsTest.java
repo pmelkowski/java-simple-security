@@ -1,27 +1,18 @@
 package com.github.jss;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 public class AlgorithmsTest {
 
-    @Test
-    public void testGetCertificateAlgorithms() {
-        assertFalse(Algorithms.getCertificateAlgorithms().isEmpty());
-    }
-
-    @Test
-    public void testGetKeyAlgorithms() {
-        assertFalse(Algorithms.getKeyAlgorithms().isEmpty());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
+	private static final List<String> SERVICES = List.of(
         "AlgorithmParameters",
         "AlgorithmParameterGenerator",
         "CertificateFactory",
@@ -35,7 +26,25 @@ public class AlgorithmsTest {
         "MessageDigest",
         "SecureRandom",
         "Signature"
-    })
+    );
+
+    @Test
+    public void testGetCertificateAlgorithms() {
+        assertFalse(Algorithms.getCertificateAlgorithms().isEmpty());
+    }
+
+    @Test
+    public void testGetKeyAlgorithms() {
+        assertFalse(Algorithms.getKeyAlgorithms().isEmpty());
+    }
+
+    @Test
+    public void testGetSignatureAlgorithms() {
+        assertFalse(Algorithms.getSignatureAlgorithms().isEmpty());
+    }
+
+    @ParameterizedTest
+    @FieldSource("SERVICES")
     public void testGetAlgorithms(String serviceType) {
         assertFalse(Algorithms.getAlgorithms(serviceType).isEmpty());
     }
@@ -53,27 +62,19 @@ public class AlgorithmsTest {
     }
 
     @ParameterizedTest
+    @MethodSource("com.github.jss.Algorithms#getSignatureAlgorithms")
+    public void testGetSignatureProviderNames(String algorithm) {
+        assertFalse(Algorithms.getSignatureProviderNames(algorithm).isEmpty());
+    }
+
+    @ParameterizedTest
     @MethodSource("getServicesAndAlgorithms")
     public void testGetProviderNames(String serviceType, String algorithm) {
         assertFalse(Algorithms.getProviderNames(serviceType, algorithm).isEmpty());
     }
 
     private static Stream<Arguments> getServicesAndAlgorithms() {
-        return Stream.of(
-                "AlgorithmParameters",
-                "AlgorithmParameterGenerator",
-                "CertificateFactory",
-                "CertPathBuilder",
-                "CertPathValidator",
-                "CertStore",
-                "Configuration",
-                "KeyFactory",
-                "KeyPairGenerator",
-                "KeyStore",
-                "MessageDigest",
-                "Policy",
-                "SecureRandom",
-                "Signature")
+        return SERVICES.stream()
             .flatMap(serviceType -> Algorithms.getAlgorithms(serviceType).stream()
                 .map(algorithm -> Arguments.of(serviceType, algorithm)));
     }
