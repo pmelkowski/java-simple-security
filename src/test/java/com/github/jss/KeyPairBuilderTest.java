@@ -4,18 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.interfaces.DSAKey;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.ECKey;
-import java.security.interfaces.EdECKey;
 import java.security.interfaces.RSAKey;
-import java.security.interfaces.XECKey;
 import java.security.spec.DSAParameterSpec;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
@@ -39,8 +34,8 @@ public class KeyPairBuilderTest {
         assertAll(
             () -> assertEquals(Defaults.getKeyAlgorithm(), keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals(Defaults.getKeyAlgorithm(), keyPair.getPublic().getAlgorithm()),
-            () -> assertEquals(Defaults.getKeySize(), getSize(keyPair.getPrivate())),
-            () -> assertEquals(Defaults.getKeySize(), getSize(keyPair.getPublic()))
+            () -> assertEquals(Defaults.getKeySize(), getSize(null, keyPair.getPrivate())),
+            () -> assertEquals(Defaults.getKeySize(), getSize(null, keyPair.getPublic()))
         );
     }
 
@@ -49,14 +44,37 @@ public class KeyPairBuilderTest {
         "DH,          512, javax.crypto.interfaces.DHKey",
         "DSA,        1024, java.security.interfaces.DSAKey",
         "EC,          384, java.security.interfaces.ECKey",
-        "EdDSA,       255, java.security.interfaces.EdECKey",
-        "EdDSA,       448, java.security.interfaces.EdECKey",
         "RSA,        4096, java.security.interfaces.RSAKey",
-        "RSASSA-PSS, 3072, java.security.interfaces.RSAKey",
+        "RSASSA-PSS, 3072, java.security.interfaces.RSAKey"
+    })
+    public void testWithSizeJdk9(String algorithm, int keySize, Class<? extends Key> keyClass)
+            throws Exception {
+        testWithSize(algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "XDH,         255, java.security.interfaces.XECKey",
         "XDH,         448, java.security.interfaces.XECKey"
     })
-    public void testWithSize(String algorithm, int keySize, Class<? extends Key> keyClass)
+    public void testWithSizeJdk11(String algorithm, int keySize, Class<? extends Key> keyClass)
+            throws Exception {
+        testWithSize(algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "EdDSA,       255, java.security.interfaces.EdECKey",
+        "EdDSA,       448, java.security.interfaces.EdECKey"
+    })
+    public void testWithSizeJdk15(String algorithm, int keySize, Class<? extends Key> keyClass)
+            throws Exception {
+        testWithSize(algorithm, keySize, keyClass);
+    }
+
+    private static void testWithSize(String algorithm, int keySize, Class<? extends Key> keyClass)
             throws Exception {
         KeyPairBuilder builder = new KeyPairBuilder()
             .withAlgorithm(algorithm)
@@ -68,43 +86,11 @@ public class KeyPairBuilderTest {
             () -> assertTrue(keyClass.isInstance(keyPair.getPublic())),
             () -> assertEquals(builder.algorithm, keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals(builder.algorithm, keyPair.getPublic().getAlgorithm()),
-            () -> assertEquals(builder.size, getSize(keyPair.getPrivate())),
-            () -> assertEquals(builder.size, getSize(keyPair.getPublic()))
+            () -> assertEquals(builder.size, getSize(keyClass, keyPair.getPrivate())),
+            () -> assertEquals(builder.size, getSize(keyClass, keyPair.getPublic()))
         );
     }
 
-    @EnabledForJreRange(minVersion = 24)
-    @ParameterizedTest
-    @CsvSource({
-        "ML-DSA,       ML-DSA-65,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-DSA-44,    ML-DSA-44,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-DSA-65,    ML-DSA-65,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-DSA-87,    ML-DSA-87,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-KEM,       ML-KEM-768,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-KEM-512,   ML-KEM-512,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-KEM-768,   ML-KEM-768,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key",
-        "ML-KEM-1024,  ML-KEM-1024,	sun.security.pkcs.NamedPKCS8Key, sun.security.x509.NamedX509Key"
-    })
-    public void testWithNamedAlgorithm(String algorithm, String parameter,
-            Class<? extends PrivateKey> privateKeyClass, Class<? extends PublicKey> publicKeyClass)
-                    throws Exception {
-        KeyPairBuilder builder = new KeyPairBuilder()
-            .withAlgorithm(algorithm);
-        KeyPair keyPair = builder.build();
-
-        assertAll(
-            () -> assertTrue(privateKeyClass.isAssignableFrom(keyPair.getPrivate().getClass())),
-            () -> assertTrue(publicKeyClass.isAssignableFrom(keyPair.getPublic().getClass())),
-            () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPrivate().getAlgorithm()),
-            () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPublic().getAlgorithm()),
-
-            // Use reflection to compile in various JRE versions (getParams() present since 22)
-            () -> assertEquals(parameter, ((NamedParameterSpec) privateKeyClass.getMethod("getParams")
-                    .invoke(keyPair.getPrivate())).getName()),
-            () -> assertEquals(parameter, ((NamedParameterSpec) publicKeyClass.getMethod("getParams")
-                    .invoke(keyPair.getPublic())).getName())
-        );
-    }
 
     @ParameterizedTest
     @CsvSource({
@@ -201,35 +187,9 @@ public class KeyPairBuilderTest {
             () -> assertTrue(keyPair.getPrivate() instanceof ECKey),
             () -> assertTrue(keyPair.getPublic() instanceof ECKey),
             () -> assertEquals("EC", keyPair.getPrivate().getAlgorithm()),
-            () -> assertEquals("EC", keyPair.getPublic().getAlgorithm())
-        );
-        assertAll(
+            () -> assertEquals("EC", keyPair.getPublic().getAlgorithm()),
             () -> assertEquals(spec, ((ECKey) keyPair.getPrivate()).getParams()),
             () -> assertEquals(spec, ((ECKey) keyPair.getPublic()).getParams())
-        );
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "Ed25519",
-        "Ed448"
-    })
-    public void testWithParamsEdDSA(String stdName) throws Exception {
-        KeyPair keyPair = new KeyPairBuilder()
-            .withParams(new NamedParameterSpec(stdName))
-            .build();
-
-        assertAll(
-            () -> assertTrue(keyPair.getPrivate() instanceof EdECKey),
-            () -> assertTrue(keyPair.getPublic() instanceof EdECKey),
-            () -> assertEquals("EdDSA", keyPair.getPrivate().getAlgorithm()),
-            () -> assertEquals("EdDSA", keyPair.getPublic().getAlgorithm())
-        );
-        assertAll(
-            () -> assertEquals(stdName, ((NamedParameterSpec)
-                    ((EdECKey) keyPair.getPrivate()).getParams()).getName()),
-            () -> assertEquals(stdName, ((NamedParameterSpec)
-                    ((EdECKey) keyPair.getPublic()).getParams()).getName())
         );
     }
 
@@ -253,8 +213,8 @@ public class KeyPairBuilderTest {
             () -> assertTrue(keyPair.getPublic() instanceof RSAKey),
             () -> assertEquals("RSA", keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals("RSA", keyPair.getPublic().getAlgorithm()),
-            () -> assertEquals(keySize, getSize(keyPair.getPrivate())),
-            () -> assertEquals(keySize, getSize(keyPair.getPublic()))
+            () -> assertEquals(keySize, getSize(RSAKey.class, keyPair.getPrivate())),
+            () -> assertEquals(keySize, getSize(RSAKey.class, keyPair.getPublic()))
         );
     }
 
@@ -279,11 +239,12 @@ public class KeyPairBuilderTest {
             () -> assertTrue(keyPair.getPublic() instanceof RSAKey),
             () -> assertEquals("RSASSA-PSS", keyPair.getPrivate().getAlgorithm()),
             () -> assertEquals("RSASSA-PSS", keyPair.getPublic().getAlgorithm()),
-            () -> assertEquals(keySize, getSize(keyPair.getPrivate())),
-            () -> assertEquals(keySize, getSize(keyPair.getPublic()))
+            () -> assertEquals(keySize, getSize(RSAKey.class, keyPair.getPrivate())),
+            () -> assertEquals(keySize, getSize(RSAKey.class, keyPair.getPublic()))
         );
     }
 
+    @EnabledForJreRange(minVersion = 11)
     @ParameterizedTest
     @ValueSource(strings = {
         "X25519",
@@ -294,21 +255,72 @@ public class KeyPairBuilderTest {
             .withParams(new NamedParameterSpec(stdName))
             .build();
 
+        // Use reflection to compile on various JDK versions
+        Class<?> keyClass = JavaBaseModule.getClass("java.security.interfaces.XECKey");
         assertAll(
-            () -> assertTrue(keyPair.getPrivate() instanceof XECKey),
-            () -> assertTrue(keyPair.getPublic() instanceof XECKey),
+            () -> assertTrue(keyClass.isAssignableFrom(keyPair.getPrivate().getClass())),
+            () -> assertTrue(keyClass.isAssignableFrom(keyPair.getPublic().getClass())),
             () -> assertEquals("XDH", keyPair.getPrivate().getAlgorithm()),
-            () -> assertEquals("XDH", keyPair.getPublic().getAlgorithm())
-        );
-        assertAll(
-            () -> assertEquals(stdName, ((NamedParameterSpec)
-                    ((XECKey) keyPair.getPrivate()).getParams()).getName()),
-            () -> assertEquals(stdName, ((NamedParameterSpec)
-                    ((XECKey) keyPair.getPublic()).getParams()).getName())
+            () -> assertEquals("XDH", keyPair.getPublic().getAlgorithm()),
+            () -> assertEquals(stdName, getParameterName(keyClass, keyPair.getPrivate())),
+            () -> assertEquals(stdName, getParameterName(keyClass, keyPair.getPublic()))
         );
     }
 
-    protected static int getSize(Key key) {
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "Ed25519",
+        "Ed448"
+    })
+    public void testWithParamsEdDSA(String stdName) throws Exception {
+        KeyPair keyPair = new KeyPairBuilder()
+            .withParams(new NamedParameterSpec(stdName))
+            .build();
+
+        // Use reflection to compile on various JDK versions
+        Class<?> keyClass = JavaBaseModule.getClass("java.security.interfaces.EdECKey");
+        assertAll(
+            () -> assertTrue(keyClass.isAssignableFrom(keyPair.getPrivate().getClass())),
+            () -> assertTrue(keyClass.isAssignableFrom(keyPair.getPublic().getClass())),
+            () -> assertEquals("EdDSA", keyPair.getPrivate().getAlgorithm()),
+            () -> assertEquals("EdDSA", keyPair.getPublic().getAlgorithm()),
+            () -> assertEquals(stdName, getParameterName(keyClass, keyPair.getPrivate())),
+            () -> assertEquals(stdName, getParameterName(keyClass, keyPair.getPublic()))
+        );
+    }
+
+    @EnabledForJreRange(minVersion = 24)
+    @ParameterizedTest
+    @CsvSource({
+        "ML-DSA,       ML-DSA-65",
+        "ML-DSA-44,    ML-DSA-44",
+        "ML-DSA-65,    ML-DSA-65",
+        "ML-DSA-87,    ML-DSA-87",
+        "ML-KEM,       ML-KEM-768",
+        "ML-KEM-512,   ML-KEM-512",
+        "ML-KEM-768,   ML-KEM-768",
+        "ML-KEM-1024,  ML-KEM-1024"
+    })
+    public void testWithNamedAlgorithm(String algorithm, String parameter) throws Exception {
+        KeyPairBuilder builder = new KeyPairBuilder()
+            .withAlgorithm(algorithm);
+        KeyPair keyPair = builder.build();
+
+        // Use reflection to compile on various JDK versions
+        Class<?> privateKeyClass = JavaBaseModule.getClass("sun.security.pkcs.NamedPKCS8Key");
+        Class<?> publicKeyClass = JavaBaseModule.getClass("sun.security.x509.NamedX509Key");
+        assertAll(
+            () -> assertTrue(privateKeyClass.isAssignableFrom(keyPair.getPrivate().getClass())),
+            () -> assertTrue(publicKeyClass.isAssignableFrom(keyPair.getPublic().getClass())),
+            () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPrivate().getAlgorithm()),
+            () -> assertEquals(builder.algorithm.substring(0, 6), keyPair.getPublic().getAlgorithm()),
+            () -> assertEquals(parameter, getParameterName(privateKeyClass, keyPair.getPrivate())),
+            () -> assertEquals(parameter, getParameterName(publicKeyClass, keyPair.getPublic()))
+        );
+    }
+
+    protected static int getSize(Class<?> keyClass, Key key) throws Exception {
         if (key instanceof DHKey) {
             return ((DHKey) key).getParams().getP().bitLength();
         }
@@ -322,25 +334,25 @@ public class KeyPairBuilderTest {
             return ((RSAKey) key).getModulus().bitLength();
         }
 
-        NamedParameterSpec namedParameterSpec = null;
-        if (key instanceof EdECKey) {
-            namedParameterSpec = (NamedParameterSpec) ((EdECKey) key).getParams();
-        }
-        if (key instanceof XECKey) {
-            namedParameterSpec = (NamedParameterSpec) ((XECKey) key).getParams();
-        }
-        if (namedParameterSpec != null) {
-            switch (namedParameterSpec.getName()) {
-                case "Ed25519":
-                case "X25519":
-                    return 255;
-                case "Ed448":
-                case "X448":
-                    return 448;
-            }
+        switch (getParameterName(keyClass, key)) {
+        case "Ed25519":
+        case "X25519":
+            return 255;
+        case "Ed448":
+        case "X448":
+            return 448;
         }
 
         throw new IllegalArgumentException(key.getClass().getName());
+    }
+
+    private static String getParameterName(Class<?> keyClass, Key key) throws Exception {
+        // Use reflection to compile on various JDK versions
+        return (String) JavaBaseModule.getClass("java.security.spec.NamedParameterSpec")
+            .getMethod("getName")
+            .invoke(keyClass
+                .getMethod("getParams")
+                .invoke(key));
     }
 
 }

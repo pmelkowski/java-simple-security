@@ -1,19 +1,15 @@
 package com.github.jss.providers;
 
-import java.io.IOException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SignatureException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Set;
+
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateSerialNumber;
@@ -31,26 +27,51 @@ public class Sun extends Provider {
     }
 
     @Override
-    public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
-            int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber,
-            String signingAlgorithm) throws NoSuchAlgorithmException, CertificateException,
-            IOException, InvalidKeyException, NoSuchProviderException, SignatureException {
-        AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);
+	public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
+            int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber, String signingAlgorithm)
+            throws Exception {
 
         ZonedDateTime now = ZonedDateTime.now();
         Date notBefore = Date.from(now.toInstant());
         Date notAfter = Date.from(now.plus(validityAmount, validityUnit).toInstant());
-
+        AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);
         X509CertInfo info = new X509CertInfo();
-        info.setAlgorithmId(new CertificateAlgorithmId(signingAlgorithmId));
-        info.setIssuer(new X500Name(ISSUER.getName()));
-        info.setKey(new CertificateX509Key(subjectKey));
-        info.setSerialNumber(new CertificateSerialNumber(serialNumber));
-        info.setSubject(new X500Name(SUBJECT.getName()));
-        info.setValidity(new CertificateValidity(notBefore, notAfter));
-        info.setVersion(new CertificateVersion(version));
 
-        return X509CertImpl.newSigned(info, issuerKey, signingAlgorithmId.getName());
+        // Use reflection to handle various JRE versions
+        if (Runtime.version().version().get(0) < 20) {
+            Method setter = X509CertInfo.class.getMethod("set", String.class, Object.class);
+            setter.invoke(info, X509CertInfo.ALGORITHM_ID, signingAlgorithmId);
+            setter.invoke(info, X509CertInfo.ISSUER, new X500Name(ISSUER.getName()));
+            setter.invoke(info, X509CertInfo.KEY, new CertificateX509Key(subjectKey));
+            setter.invoke(info, X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(serialNumber));
+            setter.invoke(info, X509CertInfo.SUBJECT, new X500Name(SUBJECT.getName()));
+            setter.invoke(info, X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
+            setter.invoke(info, X509CertInfo.VERSION, version);
+
+            X509CertImpl certificate = X509CertImpl.class.getConstructor(X509CertInfo.class).newInstance(info);
+            X509CertImpl.class.getMethod("sign", PrivateKey.class, String.class)
+                .invoke(certificate, issuerKey, signingAlgorithmId.getName());
+            return certificate;
+        } else {
+            X509CertInfo.class.getMethod("setAlgorithmId", CertificateAlgorithmId.class)
+                .invoke(info, signingAlgorithmId);
+            X509CertInfo.class.getMethod("setIssuer", X500Name.class)
+                .invoke(info, new X500Name(ISSUER.getName()));
+            X509CertInfo.class.getMethod("setKey", CertificateX509Key.class)
+                .invoke(info, new CertificateX509Key(subjectKey));
+            X509CertInfo.class.getMethod("setSerialNumber", CertificateSerialNumber.class)
+                .invoke(info, new CertificateSerialNumber(serialNumber));
+            X509CertInfo.class.getMethod("setSubject", X500Name.class)
+                .invoke(info, new X500Name(SUBJECT.getName()));
+            X509CertInfo.class.getMethod("setValidity", CertificateValidity.class)
+                .invoke(info, new CertificateValidity(notBefore, notAfter));
+            X509CertInfo.class.getMethod("setVersion", CertificateVersion.class)
+                .invoke(info, version);
+
+            return (X509Certificate) X509CertImpl.class.getMethod("newSigned",
+                    X509CertInfo.class, PrivateKey.class, String.class)
+                .invoke(X509CertImpl.class, info, issuerKey, signingAlgorithmId.getName());
+        }
     }
 
     @Override

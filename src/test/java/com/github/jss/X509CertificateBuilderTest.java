@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
@@ -158,7 +159,7 @@ public class X509CertificateBuilderTest {
         return Algorithms.getSignatureAlgorithms().stream()
             .filter(algorithm -> Algorithms.getSignatureProviderNames(algorithm)
                     .contains("SunRsaSign"))
-            .toList();
+            .collect(Collectors.toList());
     }
 
 }
