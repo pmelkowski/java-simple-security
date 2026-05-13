@@ -11,10 +11,10 @@ import java.security.interfaces.DSAKey;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.ECKey;
 import java.security.interfaces.RSAKey;
+import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.DSAParameterSpec;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
-import java.security.spec.NamedParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import javax.crypto.interfaces.DHKey;
 import javax.crypto.spec.DHParameterSpec;
@@ -23,7 +23,6 @@ import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 public class KeyPairBuilderTest {
 
@@ -44,8 +43,7 @@ public class KeyPairBuilderTest {
         "DH,          512, javax.crypto.interfaces.DHKey",
         "DSA,        1024, java.security.interfaces.DSAKey",
         "EC,          384, java.security.interfaces.ECKey",
-        "RSA,        4096, java.security.interfaces.RSAKey",
-        "RSASSA-PSS, 3072, java.security.interfaces.RSAKey"
+        "RSA,        4096, java.security.interfaces.RSAKey"
     })
     public void testWithSizeJdk9(String algorithm, int keySize, Class<? extends Key> keyClass)
             throws Exception {
@@ -55,6 +53,7 @@ public class KeyPairBuilderTest {
     @EnabledForJreRange(minVersion = 11)
     @ParameterizedTest
     @CsvSource({
+        "RSASSA-PSS, 3072, java.security.interfaces.RSAKey",
         "XDH,         255, java.security.interfaces.XECKey",
         "XDH,         448, java.security.interfaces.XECKey"
     })
@@ -218,6 +217,7 @@ public class KeyPairBuilderTest {
         );
     }
 
+    @EnabledForJreRange(minVersion = 11)
     @ParameterizedTest
     @CsvSource({
         " 512,  65537",
@@ -246,13 +246,14 @@ public class KeyPairBuilderTest {
 
     @EnabledForJreRange(minVersion = 11)
     @ParameterizedTest
-    @ValueSource(strings = {
-        "X25519",
-        "X448"
+    @CsvSource({
+        "X25519, X25519",
+        "X448,   X448"
     })
-    public void testWithParamsXDH(String stdName) throws Exception {
+    public void testWithParamsXDH(@ConvertWith(NamedParameterConverter.class) AlgorithmParameterSpec param,
+            String stdName) throws Exception {
         KeyPair keyPair = new KeyPairBuilder()
-            .withParams(new NamedParameterSpec(stdName))
+            .withParams(param)
             .build();
 
         // Use reflection to compile on various JDK versions
@@ -269,17 +270,18 @@ public class KeyPairBuilderTest {
 
     @EnabledForJreRange(minVersion = 15)
     @ParameterizedTest
-    @ValueSource(strings = {
-        "Ed25519",
-        "Ed448"
+    @CsvSource({
+        "Ed25519, Ed25519",
+        "Ed448,   Ed448"
     })
-    public void testWithParamsEdDSA(String stdName) throws Exception {
+    public void testWithParamsEdDSA(@ConvertWith(NamedParameterConverter.class) AlgorithmParameterSpec param,
+            String stdName) throws Exception {
         KeyPair keyPair = new KeyPairBuilder()
-            .withParams(new NamedParameterSpec(stdName))
+            .withParams(param)
             .build();
 
         // Use reflection to compile on various JDK versions
-        Class<?> keyClass = JavaBaseModule.getClass("java.security.interfaces.EdECKey");
+       Class<?> keyClass = JavaBaseModule.getClass("java.security.interfaces.EdECKey");
         assertAll(
             () -> assertTrue(keyClass.isAssignableFrom(keyPair.getPrivate().getClass())),
             () -> assertTrue(keyClass.isAssignableFrom(keyPair.getPublic().getClass())),

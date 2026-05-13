@@ -30,23 +30,23 @@ public class Sun extends Provider {
 	public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
             int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber, String signingAlgorithm)
             throws Exception {
-
+        AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);
         ZonedDateTime now = ZonedDateTime.now();
         Date notBefore = Date.from(now.toInstant());
         Date notAfter = Date.from(now.plus(validityAmount, validityUnit).toInstant());
-        AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);
         X509CertInfo info = new X509CertInfo();
 
         // Use reflection to handle various JRE versions
         if (Runtime.version().version().get(0) < 20) {
             Method setter = X509CertInfo.class.getMethod("set", String.class, Object.class);
-            setter.invoke(info, X509CertInfo.ALGORITHM_ID, signingAlgorithmId);
+            setter.invoke(info, X509CertInfo.ALGORITHM_ID,
+                    new CertificateAlgorithmId(signingAlgorithmId));
             setter.invoke(info, X509CertInfo.ISSUER, new X500Name(ISSUER.getName()));
             setter.invoke(info, X509CertInfo.KEY, new CertificateX509Key(subjectKey));
             setter.invoke(info, X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(serialNumber));
             setter.invoke(info, X509CertInfo.SUBJECT, new X500Name(SUBJECT.getName()));
             setter.invoke(info, X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
-            setter.invoke(info, X509CertInfo.VERSION, version);
+            setter.invoke(info, X509CertInfo.VERSION, new CertificateVersion(version));
 
             X509CertImpl certificate = X509CertImpl.class.getConstructor(X509CertInfo.class).newInstance(info);
             X509CertImpl.class.getMethod("sign", PrivateKey.class, String.class)
@@ -54,7 +54,7 @@ public class Sun extends Provider {
             return certificate;
         } else {
             X509CertInfo.class.getMethod("setAlgorithmId", CertificateAlgorithmId.class)
-                .invoke(info, signingAlgorithmId);
+                .invoke(info, new CertificateAlgorithmId(signingAlgorithmId));
             X509CertInfo.class.getMethod("setIssuer", X500Name.class)
                 .invoke(info, new X500Name(ISSUER.getName()));
             X509CertInfo.class.getMethod("setKey", CertificateX509Key.class)
@@ -66,7 +66,7 @@ public class Sun extends Provider {
             X509CertInfo.class.getMethod("setValidity", CertificateValidity.class)
                 .invoke(info, new CertificateValidity(notBefore, notAfter));
             X509CertInfo.class.getMethod("setVersion", CertificateVersion.class)
-                .invoke(info, version);
+                .invoke(info, new CertificateVersion(version));
 
             return (X509Certificate) X509CertImpl.class.getMethod("newSigned",
                     X509CertInfo.class, PrivateKey.class, String.class)
