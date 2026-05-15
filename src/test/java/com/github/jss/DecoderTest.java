@@ -25,31 +25,54 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPrivateKey",
         "BC,  EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
+        "SUN, DH,         2048, com.sun.crypto.provider.DHPrivateKey",
+        "SUN, DSA,        1024, sun.security.provider.DSAPrivateKey",
+        "SUN, EC,          384, sun.security.ec.ECPrivateKeyImpl",
+        "SUN, RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl"
+    })
+    public void testDecodePrivateKeyStringJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKeyString(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "BC,  X25519,         , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl",
-        "SUN, DH,         2048, com.sun.crypto.provider.DHPrivateKey",
-        "SUN, DSA,        1024, sun.security.provider.DSAPrivateKey",
-        "SUN, EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "SUN, X25519,         , sun.security.ec.XDHPrivateKeyImpl",
         "SUN, X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPrivateKeyImpl"
     })
-    public void testDecodePrivateKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePrivateKeyStringJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKeyString(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl"
+    })
+    public void testDecodePrivateKeyStringJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKeyString(provider, algorithm, keySize, keyClass);
+    }
+
+    private static void testDecodePrivateKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
         String encodedPrivate = provider.encodeKey(privateKey);
@@ -102,18 +125,42 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPrivateKey",
         "BC,  EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
+        "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl"
+    })
+    public void testDecodePrivateKeyPemJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKeyPem(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "BC,  X25519,         , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl"
     })
-    public void testDecodePrivateKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePrivateKeyPemJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKeyPem(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl"
+
+    })
+    public void testDecodePrivateKeyPemJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKeyPem(provider, algorithm, keySize, keyClass);
+    }
+
+    private static void testDecodePrivateKeyPem(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
         String pemPrivate = provider.encodeToPEM(privateKey);
@@ -138,7 +185,7 @@ public class DecoderTest {
         "BC,  ML-KEM-768,   sun.security.pkcs.NamedPKCS8Key",
         "BC,  ML-KEM-1024,  sun.security.pkcs.NamedPKCS8Key"
     })
-    public void testDecodeNamedPrivateKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodeNamedPrivateKeyPem(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, null).getPrivate();
         String pemPrivate = provider.encodeToPEM(privateKey);
@@ -158,31 +205,54 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPrivateKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPrivateKey",
         "BC,  EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
         "BC,  RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
+        "SUN, DH,         2048, com.sun.crypto.provider.DHPrivateKey",
+        "SUN, DSA,        1024, sun.security.provider.DSAPrivateKey",
+        "SUN, EC,          384, sun.security.ec.ECPrivateKeyImpl",
+        "SUN, RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl"
+    })
+    public void testDecodePrivateKeyJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKey(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "BC,  X25519,         , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPrivateKeyImpl",
-        "SUN, DH,         2048, com.sun.crypto.provider.DHPrivateKey",
-        "SUN, DSA,        1024, sun.security.provider.DSAPrivateKey",
-        "SUN, EC,          384, sun.security.ec.ECPrivateKeyImpl",
-        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
-        "SUN, RSA,        4096, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPrivateCrtKeyImpl",
         "SUN, X25519,         , sun.security.ec.XDHPrivateKeyImpl",
         "SUN, X448,           , sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPrivateKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPrivateKeyImpl"
     })
-    public void testDecodePrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePrivateKeyJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKey(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPrivateKeyImpl",
+        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPrivateKeyImpl"
+    })
+    public void testDecodePrivateKeyJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePrivateKey(provider, algorithm, keySize, keyClass);
+    }
+
+    private static void testDecodePrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
         byte[] encodedPrivate = privateKey.getEncoded();
@@ -235,31 +305,54 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "BC,  EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
+        "SUN, DH,         2048, com.sun.crypto.provider.DHPublicKey",
+        "SUN, DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
+        "SUN, EC,          384, sun.security.ec.ECPublicKeyImpl",
+        "SUN, RSA,        4096, sun.security.rsa.RSAPublicKeyImpl"
+    })
+    public void testDecodePublicKeyStringJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKeyString(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
         "BC,  X25519,         , sun.security.ec.XDHPublicKeyImpl",
         "BC,  X448,           , sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPublicKeyImpl",
-        "SUN, DH,         2048, com.sun.crypto.provider.DHPublicKey",
-        "SUN, DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
-        "SUN, EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
         "SUN, X25519,         , sun.security.ec.XDHPublicKeyImpl",
         "SUN, X448,           , sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPublicKeyImpl"
     })
-    public void testDecodePublicKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePublicKeyStringJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKeyString(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl"
+    })
+    public void testDecodePublicKeyStringJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKeyString(provider, algorithm, keySize, keyClass);
+    }
+
+    private static void testDecodePublicKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
         String encodedPublic = provider.encodeKey(publicKey);
@@ -312,18 +405,41 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "BC,  EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
+        "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl"
+    })
+    public void testDecodePublicKeyPemJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKeyPem(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
         "BC,  X25519,         , sun.security.ec.XDHPublicKeyImpl",
         "BC,  X448,           , sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPublicKeyImpl"
     })
-    public void testDecodePublicKeyPEM(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePublicKeyPemJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKeyPem(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl"
+    })
+    public void testDecodePublicKeyPemJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKeyPem(provider, algorithm, keySize, keyClass);
+    }
+
+    private static void testDecodePublicKeyPem(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
         String pemPublic = provider.encodeToPEM(publicKey);
@@ -368,31 +484,54 @@ public class DecoderTest {
         "BC,  DH,         2048, com.sun.crypto.provider.DHPublicKey",
         "BC,  DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
         "BC,  EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
         "BC,  RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
+        "SUN, DH,         2048, com.sun.crypto.provider.DHPublicKey",
+        "SUN, DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
+        "SUN, EC,          384, sun.security.ec.ECPublicKeyImpl",
+        "SUN, RSA,        4096, sun.security.rsa.RSAPublicKeyImpl"
+    })
+    public void testDecodePublicKeyJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKey(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "BC,  RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
         "BC,  X25519,         , sun.security.ec.XDHPublicKeyImpl",
         "BC,  X448,           , sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "BC,  XDH,         448, sun.security.ec.XDHPublicKeyImpl",
-        "SUN, DH,         2048, com.sun.crypto.provider.DHPublicKey",
-        "SUN, DSA,        1024, sun.security.provider.DSAPublicKeyImpl",
-        "SUN, EC,          384, sun.security.ec.ECPublicKeyImpl",
-        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
-        "SUN, RSA,        4096, sun.security.rsa.RSAPublicKeyImpl",
         "SUN, RSASSA-PSS, 3072, sun.security.rsa.RSAPublicKeyImpl",
         "SUN, X25519,         , sun.security.ec.XDHPublicKeyImpl",
         "SUN, X448,           , sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         255, sun.security.ec.XDHPublicKeyImpl",
         "SUN, XDH,         448, sun.security.ec.XDHPublicKeyImpl"
     })
-    public void testDecodePublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testDecodePublicKeyJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKey(provider, algorithm, keySize, keyClass);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "BC,  Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "BC,  EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed25519,        , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, Ed448,          , sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, EdDSA,       255, sun.security.ec.ed.EdDSAPublicKeyImpl",
+        "SUN, EdDSA,       448, sun.security.ec.ed.EdDSAPublicKeyImpl"
+    })
+    public void testDecodePublicKeyJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
+        testDecodePublicKey(provider, algorithm, keySize, keyClass);
+    }
+
+    private static void testDecodePublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
         byte[] encodedPublic = publicKey.getEncoded();

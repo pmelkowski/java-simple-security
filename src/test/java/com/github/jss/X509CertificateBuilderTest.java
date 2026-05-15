@@ -3,8 +3,11 @@ package com.github.jss;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -18,6 +21,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import sun.security.x509.X509CertImpl;
 
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
@@ -56,6 +60,8 @@ public class X509CertificateBuilderTest {
             () -> assertNotNull(certificate.getNotBefore()),
             () -> assertNotNull(certificate.getNotAfter()),
             () -> assertNotNull(certificate.getSerialNumber()),
+            () -> assertFalse(X509CertImpl.isSelfIssued(certificate)),
+            () -> assertFalse(X509CertImpl.isSelfSigned(certificate, "SunRsaSign")),
             () -> assertDoesNotThrow(() -> certificate.verify(ISSUER_KEYS.getPublic())),
             () -> assertDoesNotThrow(() -> certificate.checkValidity())
         );
@@ -74,6 +80,8 @@ public class X509CertificateBuilderTest {
             () -> assertNotNull(certificate.getNotBefore()),
             () -> assertNotNull(certificate.getNotAfter()),
             () -> assertNotNull(certificate.getSerialNumber()),
+            () -> assertTrue(X509CertImpl.isSelfIssued(certificate)),
+            () -> assertTrue(X509CertImpl.isSelfSigned(certificate, "SunRsaSign")),
             () -> assertDoesNotThrow(() -> certificate.verify(SUBJECT_KEYS.getPublic())),
             () -> assertDoesNotThrow(() -> certificate.checkValidity())
         );
@@ -151,14 +159,19 @@ public class X509CertificateBuilderTest {
             () -> assertEquals(builder.signingAlgorithm.getName(), certificate.getSigAlgName()),
             () -> assertEquals(Date.from(builder.notBefore), certificate.getNotBefore()),
             () -> assertEquals(Date.from(builder.notAfter), certificate.getNotAfter()),
-            () -> assertEquals(builder.serialNumber, certificate.getSerialNumber())
+            () -> assertEquals(builder.serialNumber, certificate.getSerialNumber()),
+            () -> assertFalse(X509CertImpl.isSelfIssued(certificate)),
+            () -> assertFalse(X509CertImpl.isSelfSigned(certificate, "SunRsaSign"))
         );
     }
 
     private static List<String> getRsaSigningAlgorithms() {
+        int jreVersion = Runtime.version().version().get(0);
         return Algorithms.getSignatureAlgorithms().stream()
             .filter(algorithm -> Algorithms.getSignatureProviderNames(algorithm)
                     .contains("SunRsaSign"))
+            // Fixed by https://bugs.openjdk.org/browse/JDK-8242068
+            .filter(algorithm -> !algorithm.equals("RSASSA-PSS") || jreVersion >= 16)
             .collect(Collectors.toList());
     }
 

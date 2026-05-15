@@ -44,18 +44,41 @@ public class EncoderTest {
         "SUN, DH,           2048",
         "SUN, DSA,          1024",
         "SUN, EC,            384",
-        "SUN, Ed25519,          ",
-        "SUN, Ed448,            ",
-        "SUN, EdDSA,         255",
-        "SUN, EdDSA,         448",
-        "SUN, RSA,          4096",
+        "SUN, RSA,          4096"
+    })
+    public void testEncodeKeyJdk9(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize) throws Exception {
+        testEncodeKey(provider, algorithm, keySize);
+    }
+
+    @EnabledForJreRange(minVersion = 11)
+    @ParameterizedTest
+    @CsvSource({
         "SUN, RSASSA-PSS,   3072",
         "SUN, X25519,           ",
         "SUN, X448,             ",
         "SUN, XDH,           255",
         "SUN, XDH,           448"
     })
-    public void testEncodeKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    public void testEncodeKeyJdk11(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize) throws Exception {
+        testEncodeKey(provider, algorithm, keySize);
+    }
+
+    @EnabledForJreRange(minVersion = 15)
+    @ParameterizedTest
+    @CsvSource({
+        "SUN, Ed25519,          ",
+        "SUN, Ed448,            ",
+        "SUN, EdDSA,         255",
+        "SUN, EdDSA,         448"
+    })
+    public void testEncodeKeyJdk15(@ConvertWith(ProviderConverter.class) Provider provider,
+            String algorithm, Integer keySize) throws Exception {
+        testEncodeKey(provider, algorithm, keySize);
+    }
+
+    private static void testEncodeKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
