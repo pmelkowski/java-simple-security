@@ -56,7 +56,8 @@ final class KeyDecoder {
             // algorithm.OID
             return Optional.of(new AlgorithmId(derAlgorithm.toDerInputStream().getOID()))
                     .map(AlgorithmId::getName)
-                    .map(String::toUpperCase);
+                    .map(String::toUpperCase)
+                    .map(algorithm -> algorithm.equals("DIFFIE-HELLMAN") ? "DH" : algorithm);
         } catch (IOException e) {
             return Optional.empty();
         }
