@@ -51,17 +51,16 @@ public class Decoder {
 
     private static PrivateKey decodePrivateKey(String algorithm, byte[] encoded)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
+        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
         Optional<PrivateKey> decoded = KeyDecoder.decodePrivateKey(algorithm, encoded);
         if (decoded.isPresent()) {
             try {
-                return (PrivateKey) KeyFactory.getInstance(algorithm)
-                        .translateKey(decoded.get());
-            } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+                return (PrivateKey) keyFactory.translateKey(decoded.get());
+            } catch (InvalidKeyException e) {
             }
         }
 
-        return KeyFactory.getInstance(algorithm)
-                .generatePrivate(new PKCS8EncodedKeySpec(encoded, algorithm));
+        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(encoded, algorithm));
     }
 
     public static PublicKey decodePublicKey(String encodedString)
@@ -97,17 +96,16 @@ public class Decoder {
 
     private static PublicKey decodePublicKey(String algorithm, byte[] encoded)
             throws InvalidKeySpecException, NoSuchAlgorithmException {
+        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
         Optional<PublicKey> decoded = KeyDecoder.decodePublicKey(algorithm, encoded);
         if (decoded.isPresent()) {
             try {
-                return (PublicKey) KeyFactory.getInstance(algorithm)
-                        .translateKey(decoded.get());
-            } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+                return (PublicKey) keyFactory.translateKey(decoded.get());
+            } catch (InvalidKeyException e) {
             }
         }
 
-        return KeyFactory.getInstance(algorithm)
-                .generatePublic(new X509EncodedKeySpec(encoded, algorithm));
+        return keyFactory.generatePublic(new X509EncodedKeySpec(encoded, algorithm));
     }
 
     public static Certificate decodeCertificate(String encodedString) throws CertificateException {
