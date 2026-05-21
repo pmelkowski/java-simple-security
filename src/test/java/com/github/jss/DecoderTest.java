@@ -3,6 +3,7 @@ package com.github.jss;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.math.BigInteger;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -72,7 +73,7 @@ public class DecoderTest {
         testDecodePrivateKeyString(provider, algorithm, keySize, keyClass);
     }
 
-    private static void testDecodePrivateKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testDecodePrivateKeyString(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
         String encodedPrivate = provider.encodeKey(privateKey);
@@ -81,7 +82,7 @@ public class DecoderTest {
 
         assertAll(
             () -> assertEquals(keyClass, decodedPrivate.getClass()),
-            () -> assertEquals(privateKey, decodedPrivate)
+            () -> assertKeyEquals(privateKey, decodedPrivate)
         );
     }
 
@@ -160,7 +161,7 @@ public class DecoderTest {
         testDecodePrivateKeyPem(provider, algorithm, keySize, keyClass);
     }
 
-    private static void testDecodePrivateKeyPem(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testDecodePrivateKeyPem(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
         String pemPrivate = provider.encodeToPEM(privateKey);
@@ -169,7 +170,7 @@ public class DecoderTest {
 
         assertAll(
             () -> assertEquals(keyClass, decodedPrivate.getClass()),
-            () -> assertEquals(privateKey, decodedPrivate)
+            () -> assertKeyEquals(privateKey, decodedPrivate)
         );
     }
 
@@ -252,7 +253,7 @@ public class DecoderTest {
         testDecodePrivateKey(provider, algorithm, keySize, keyClass);
     }
 
-    private static void testDecodePrivateKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testDecodePrivateKey(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
         byte[] encodedPrivate = privateKey.getEncoded();
@@ -261,7 +262,7 @@ public class DecoderTest {
 
         assertAll(
             () -> assertEquals(keyClass, decodedPrivate.getClass()),
-            () -> assertEquals(privateKey, decodedPrivate)
+            () -> assertKeyEquals(privateKey, decodedPrivate)
         );
     }
 
@@ -352,7 +353,7 @@ public class DecoderTest {
         testDecodePublicKeyString(provider, algorithm, keySize, keyClass);
     }
 
-    private static void testDecodePublicKeyString(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testDecodePublicKeyString(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
         String encodedPublic = provider.encodeKey(publicKey);
@@ -361,7 +362,7 @@ public class DecoderTest {
 
         assertAll(
             () -> assertEquals(keyClass, decodedPublic.getClass()),
-            () -> assertEquals(publicKey, decodedPublic)
+            () -> assertKeyEquals(publicKey, decodedPublic)
         );
     }
 
@@ -439,7 +440,7 @@ public class DecoderTest {
         testDecodePublicKeyPem(provider, algorithm, keySize, keyClass);
     }
 
-    private static void testDecodePublicKeyPem(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testDecodePublicKeyPem(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
         String pemPublic = provider.encodeToPEM(publicKey);
@@ -448,7 +449,7 @@ public class DecoderTest {
 
         assertAll(
             () -> assertEquals(keyClass, decodedPublic.getClass()),
-            () -> assertEquals(publicKey, decodedPublic)
+            () -> assertKeyEquals(publicKey, decodedPublic)
         );
     }
 
@@ -531,7 +532,7 @@ public class DecoderTest {
         testDecodePublicKey(provider, algorithm, keySize, keyClass);
     }
 
-    private static void testDecodePublicKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testDecodePublicKey(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
         PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
         byte[] encodedPublic = publicKey.getEncoded();
@@ -540,7 +541,7 @@ public class DecoderTest {
 
         assertAll(
             () -> assertEquals(keyClass, decodedPublic.getClass()),
-            () -> assertEquals(publicKey, decodedPublic)
+            () -> assertKeyEquals(publicKey, decodedPublic)
         );
     }
 
@@ -606,7 +607,7 @@ public class DecoderTest {
         assertAll(
             () -> assertEquals(certificate, decoded),
             () -> assertEquals(certClass, decoded.getClass()),
-            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
+            () -> assertKeyEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 
@@ -632,7 +633,7 @@ public class DecoderTest {
         assertAll(
             () -> assertEquals(certificate, decoded),
             () -> assertEquals(certClass, decoded.getClass()),
-            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
+            () -> assertKeyEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
     }
 
@@ -663,8 +664,20 @@ public class DecoderTest {
         assertAll(
             () -> assertEquals(certificate, decoded),
             () -> assertEquals(certClass, decoded.getClass()),
-            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
+            () -> assertKeyEquals(keyPair.getPublic(), decoded.getPublicKey())
         );
+    }
+
+    private static void assertKeyEquals(Key expected, Key actual) {
+        switch (actual.getAlgorithm()) {
+        case "XDH":
+            if (Runtime.version().version().get(0) < 16) {
+                // JDK bug, equals doesn't work
+                return;
+            }
+        default:
+            assertEquals(expected, actual);
+        }
     }
 
 }
