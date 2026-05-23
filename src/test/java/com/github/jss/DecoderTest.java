@@ -1,6 +1,7 @@
 package com.github.jss;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.math.BigInteger;
 import java.security.Key;
@@ -9,6 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -668,12 +670,49 @@ public class DecoderTest {
         );
     }
 
+    private static byte[] INVALID_X25519 = new byte[] {48, 7, 6, 3, 43, 101, 110, 5, 0};
+    private static byte[] INVALID_X448 =   new byte[] {48, 7, 6, 3, 43, 101, 111, 5, 0};
+
     private static void assertKeyEquals(Key expected, Key actual) {
         switch (actual.getAlgorithm()) {
         case "XDH":
             if (Runtime.version().version().get(0) < 16) {
-                // JDK bug, equals doesn't work
-                return;
+                byte[] encodedExpected = expected.getEncoded();
+                byte[] encodedActual = actual.getEncoded();
+
+                if (!Arrays.equals(encodedExpected, encodedActual)) {
+                    int actualOffset, expectedOffset;
+                    switch (actual.getFormat()) {
+                    case "PKCS#8":
+                        // 3 bytes for version
+                        actualOffset = 5;
+                        expectedOffset = expected.getAlgorithm().equals("X25519") ? 12 : 13;
+                        break;
+                    case "X.509":
+                        actualOffset = 2;
+                        expectedOffset = 9;
+                        break;
+                    default:
+                        throw new IllegalArgumentException(actual.getFormat());
+                    }
+                    byte[] encodedAlgorithm = Arrays.copyOfRange(encodedActual, actualOffset,
+                            actualOffset + INVALID_X25519.length);
+
+                    // JDK bug https://bugs.openjdk.org/browse/JDK-8252377, null parameter in XDH algorithms
+                    if (Arrays.equals(encodedAlgorithm, INVALID_X25519) ||
+                            Arrays.equals(encodedAlgorithm, INVALID_X448)) {
+                        byte[] keyExpected = Arrays.copyOfRange(encodedExpected, expectedOffset,
+                                encodedExpected.length);
+                        byte[] keyActual = Arrays.copyOfRange(encodedActual, actualOffset + INVALID_X25519.length,
+                                encodedActual.length);
+                        if (actual.getFormat().equals("PKCS#8") && (keyExpected.length > keyActual.length)) {
+                            // ignore public key included in private key
+                            keyExpected = Arrays.copyOfRange(keyExpected, 0, keyActual.length);
+                        }
+                        assertArrayEquals(keyExpected, keyActual);
+                        break;
+                    }
+                }
             }
         default:
             assertEquals(expected, actual);

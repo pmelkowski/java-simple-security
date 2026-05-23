@@ -78,7 +78,7 @@ public class EncoderTest {
         testEncodeKey(provider, algorithm, keySize);
     }
 
-    private static void testEncodeKey(@ConvertWith(ProviderConverter.class) Provider provider,
+    private static void testEncodeKey(Provider provider,
             String algorithm, Integer keySize) throws Exception {
         KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
 
