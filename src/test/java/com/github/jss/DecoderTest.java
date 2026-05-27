@@ -687,6 +687,11 @@ public class DecoderTest {
                         // 3 bytes for version
                         actualOffset = 5;
                         expectedOffset = expected.getAlgorithm().equals("X25519") ? 12 : 13;
+                        if (Runtime.version().version().get(0) == 11) {
+                            // JDK bug https://bugs.openjdk.org/browse/JDK-8213363 - invalid XDH private
+                            // key decoding and encoding
+                            expectedOffset = expectedOffset + 2;
+                        }
                         break;
                     case "X.509":
                         actualOffset = 2;
@@ -698,15 +703,16 @@ public class DecoderTest {
                     byte[] encodedAlgorithm = Arrays.copyOfRange(encodedActual, actualOffset,
                             actualOffset + INVALID_X25519.length);
 
-                    // JDK bug https://bugs.openjdk.org/browse/JDK-8252377, null parameter in XDH algorithms
                     if (Arrays.equals(encodedAlgorithm, INVALID_X25519) ||
                             Arrays.equals(encodedAlgorithm, INVALID_X448)) {
+                        // JDK bug https://bugs.openjdk.org/browse/JDK-8252377 - null parameter in XDH algorithms
                         byte[] keyExpected = Arrays.copyOfRange(encodedExpected, expectedOffset,
                                 encodedExpected.length);
                         byte[] keyActual = Arrays.copyOfRange(encodedActual, actualOffset + INVALID_X25519.length,
                                 encodedActual.length);
                         if (actual.getFormat().equals("PKCS#8") && (keyExpected.length > keyActual.length)) {
-                            // ignore public key included in private key
+                            // ignore public key - PKCS#8 version 1 supported since JDK 15
+                            // https://bugs.openjdk.org/browse/JDK-8244565
                             keyExpected = Arrays.copyOfRange(keyExpected, 0, keyActual.length);
                         }
                         assertArrayEquals(keyExpected, keyActual);

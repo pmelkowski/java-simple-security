@@ -21,6 +21,7 @@ import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 
 import sun.security.util.DerInputStream;
+import sun.security.util.DerOutputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.AlgorithmId;
 
@@ -57,7 +58,18 @@ final class KeyDecoder {
             return Optional.of(new AlgorithmId(derAlgorithm.toDerInputStream().getOID()))
                     .map(AlgorithmId::getName)
                     .map(String::toUpperCase)
-                    .map(algorithm -> algorithm.equals("DIFFIE-HELLMAN") ? "DH" : algorithm);
+                    .map(algorithm -> {
+                        switch (algorithm) {
+                        case "DIFFIE-HELLMAN":
+                            return "DIFFIEHELLMAN";
+                        case "1.3.101.110":
+                            return "X25519";
+                        case "1.3.101.111":
+                            return "X448";
+                        default:
+                            return algorithm;
+                        }
+                    });
         } catch (IOException e) {
             return Optional.empty();
         }
@@ -80,6 +92,10 @@ final class KeyDecoder {
                 return decodePrivateKeyEC(val);
             case "RSA":
                 return decodePrivateKeyRSA(val);
+            case "X25519":
+            case "X448":
+            case "XDH":
+                return decodePrivateKeyXDH(val);
             case "ML-DSA-44":
             case "ML-DSA-65":
             case "ML-DSA-87":
@@ -363,6 +379,66 @@ final class KeyDecoder {
             @Override
             public BigInteger getCrtCoefficient() {
                 return coeff;
+            }
+        });
+    }
+
+    @SuppressWarnings("serial")
+    private static Optional<PrivateKey> decodePrivateKeyXDH(DerValue val)
+            throws IOException, NoSuchAlgorithmException, InvalidParameterSpecException {
+        if (Runtime.version().version().get(0) >= 15) {
+            // properly handled by the Sun Provider
+            return Optional.empty();
+        }
+
+        // version
+        val.data.getBigInteger();
+
+        // algorithm
+        AlgorithmId algid = AlgorithmId.parse(val.data.getDerValue());
+
+        DerValue next = val.data.getDerValue();
+        if (next.tag != DerValue.tag_OctetString) {
+            return Optional.empty();
+        }
+
+        // private key
+        byte[] key = next.getOctetString();
+        if (Runtime.version().version().get(0) == 11) {
+            // unwrap key - JDK bug https://bugs.openjdk.org/browse/JDK-8213363
+            key = new DerInputStream(key).getOctetString();
+        }
+
+        // public key
+        // der.data.getDerValue().data.getBitString();
+
+        byte[] encoded;
+        try (DerOutputStream out = new DerOutputStream()) {
+            DerOutputStream sequence = new DerOutputStream();
+            // version
+            sequence.putInteger(BigInteger.ZERO);
+            // algorithm
+            algid.encode(sequence);
+            // private key
+            sequence.putOctetString(key);
+            out.write(DerValue.tag_Sequence, sequence);
+            encoded = out.toByteArray();
+        }
+
+        return Optional.of(new PrivateKey() {
+            @Override
+            public String getAlgorithm() {
+                return "XDH";
+            }
+
+            @Override
+            public String getFormat() {
+                return "PKCS#8";
+            }
+
+            @Override
+            public byte[] getEncoded() {
+                return encoded;
             }
         });
     }
