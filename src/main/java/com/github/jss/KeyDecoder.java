@@ -92,18 +92,19 @@ final class KeyDecoder {
                 return decodePrivateKeyEC(val);
             case "RSA":
                 return decodePrivateKeyRSA(val);
+            case "XDH":
             case "X25519":
             case "X448":
-            case "XDH":
                 return decodePrivateKeyXDH(val);
+            case "ML-DSA":
             case "ML-DSA-44":
             case "ML-DSA-65":
             case "ML-DSA-87":
-                return decodeNamedPrivateKey("ML-DSA", algorithm, val);
+            case "ML-KEM":
             case "ML-KEM-512":
             case "ML-KEM-768":
             case "ML-KEM-1024":
-                return decodeNamedPrivateKey("ML-KEM", algorithm, val);
+                return decodeNamedPrivateKey(val);
             default:
                 return Optional.empty();
             }
@@ -443,8 +444,13 @@ final class KeyDecoder {
         });
     }
 
-    private static Optional<PrivateKey> decodeNamedPrivateKey(String algorithm, String parameter, DerValue val)
+    private static Optional<PrivateKey> decodeNamedPrivateKey(DerValue val)
             throws IOException {
+        if (Runtime.version().version().get(0) >= 26) {
+            // properly handled by the Sun Provider
+            return Optional.empty();
+        }
+
         // Use reflection for NamedPKCS8Key added in JRE 24
         Class<?> namedPKCS8Key = JavaBaseModule.getClass("sun.security.pkcs.NamedPKCS8Key");
         if (namedPKCS8Key == null) {
@@ -455,18 +461,23 @@ final class KeyDecoder {
         val.data.getBigInteger();
 
         // algorithm
-        val.data.getDerValue();
+        String algorithm = AlgorithmId.parse(val.data.getDerValue()).getName();
 
-        // key
-        byte[] raw = val.data.getOctetString();
-        if (raw[0] == DerValue.tag_OctetString) {
-            // Key with nested octet strings is properly handled by the Sun Provider
+        // private key
+        DerInputStream next = new DerInputStream(val.data.getOctetString());
+        DerValue key = next.getDerValue();
+        if (key.tag != DerValue.tag_Sequence) {
+            // properly handled by the Sun Provider
             return Optional.empty();
         }
+        // seed
+        key.data.getOctetString();
+        // expanded key
+        byte[] expandedKey = key.data.getOctetString();
 
         try {
             return Optional.of((PrivateKey) namedPKCS8Key.getConstructor(String.class, String.class, byte[].class)
-                    .newInstance(algorithm, parameter, raw));
+                    .newInstance(algorithm.substring(0, 6), algorithm, expandedKey));
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
                 | NoSuchMethodException e) {
             return Optional.empty();
