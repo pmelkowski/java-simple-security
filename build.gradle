@@ -4,22 +4,21 @@ plugins {
     id "maven-publish"
 }
 
-group "com.github"
-version "1.0-SNAPSHOT"
+group = "com.github"
+version = "1.0-SNAPSHOT"
 
 def projectUrl = "https://github.com/pmelkowski/java-simple-security"
 def junitVersion = "5.14.4"
 def bouncyCastleVersion = "1.84"
 
-sourceCompatibility = "1.9"
-targetCompatibility = "1.9"
-compileJava.options.encoding = "UTF-8"
 
 repositories {
     mavenCentral()
 }
 
 java {
+    sourceCompatibility = "1.9"
+    targetCompatibility = "1.9"
     withSourcesJar()
     withJavadocJar()
 }
@@ -41,6 +40,7 @@ dependencies {
 }
 
 compileJava {
+    options.encoding = "UTF-8"
     options.compilerArgs.addAll([
         "--add-exports", "java.base/sun.security.pkcs=java.simple.security",
         "--add-exports", "java.base/sun.security.util=java.simple.security",
@@ -64,8 +64,16 @@ tasks.withType(Test).configureEach {
     )
     testLogging {
         events "passed", "skipped", "failed"
-        exceptionFormat "full"
+        exceptionFormat = "full"
         showStandardStreams = true
+    }
+    afterSuite { desc, result ->
+    if (!desc.parent)
+        println("\n\nTEST ${result.resultType} " +
+            "(${result.testCount} total, " +
+            "${result.successfulTestCount} successful, " +
+            "${result.failedTestCount} failed, " +
+            "${result.skippedTestCount} skipped)")
     }
 }
 
