@@ -628,7 +628,7 @@ public class DecoderTest {
         switch (actual.getAlgorithm()) {
         case "ML-DSA":
         case "ML-KEM":
-            if ((Runtime.version().version().get(0) < 26) && actual.getFormat().equals("PKCS#8")) {
+            if (actual.getFormat().equals("PKCS#8")) {
                 int offset = actual.getAlgorithm().equals("ML-DSA") ? 38 : 70;
                 if (encodedExpected.length - encodedActual.length == offset) {
                     // ignore seed in private key - supported since JDK 26
@@ -644,7 +644,7 @@ public class DecoderTest {
             break;
 
         case "XDH":
-            if ((Runtime.version().version().get(0) < 16) && !Arrays.equals(encodedExpected, encodedActual)) {
+            if ((Runtime.version().version().get(0) < 16) && (encodedExpected.length != encodedActual.length)) {
                 int actualOffset, expectedOffset;
                 switch (actual.getFormat()) {
                 case "PKCS#8":

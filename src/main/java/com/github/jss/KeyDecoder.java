@@ -446,11 +446,6 @@ final class KeyDecoder {
 
     private static Optional<PrivateKey> decodeNamedPrivateKey(DerValue val)
             throws IOException {
-        if (Runtime.version().version().get(0) >= 26) {
-            // properly handled by the Sun Provider
-            return Optional.empty();
-        }
-
         // Use reflection for NamedPKCS8Key added in JRE 24
         Class<?> namedPKCS8Key = JavaBaseModule.getClass("sun.security.pkcs.NamedPKCS8Key");
         if (namedPKCS8Key == null) {
