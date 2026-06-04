@@ -6,20 +6,22 @@ import java.lang.reflect.Method;
 
 import sun.misc.Unsafe;
 
+@SuppressWarnings("removal")
 final class JavaBaseModule {
 
-    private static final long OVERRIDE_OFFSET = 12;
+    private static final long VISIBLE_OFFSET = 12;
     private static final Module JAVA_BASE = ModuleLayer.boot().findModule("java.base").get();
 
     private static final Method ADD_EXPORTS;
     static {
         Method addExports = null;
         try {
-            addExports = Module.class.getDeclaredMethod("implAddExports", String.class, Module.class);
             Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
             theUnsafe.setAccessible(true);
             Unsafe unsafe = (Unsafe) theUnsafe.get(null);
-            unsafe.putBoolean(addExports, OVERRIDE_OFFSET, true);
+
+            addExports = Module.class.getDeclaredMethod("implAddExports", String.class, Module.class);
+            unsafe.putBoolean(addExports, VISIBLE_OFFSET, true);
         } catch (NoSuchMethodException | SecurityException | NoSuchFieldException | IllegalArgumentException
                 | IllegalAccessException e) {
             throw new RuntimeException(e);
