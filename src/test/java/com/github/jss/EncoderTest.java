@@ -1,7 +1,8 @@
 package com.github.jss;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.github.jss.Assertions.*;
+
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -89,8 +90,8 @@ public class EncoderTest {
         PublicKey decodedPublic = provider.decodePublicKey(algorithm, encodedPublic);
 
         assertAll(
-            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertEquals(keyPair.getPublic(), decodedPublic)
+            () -> assertKeyEquals(keyPair.getPrivate(), decodedPrivate),
+            () -> assertKeyEquals(keyPair.getPublic(), decodedPublic)
         );
     }
 
@@ -117,8 +118,8 @@ public class EncoderTest {
         PublicKey decodedPublic = provider.decodePublicKey(algorithm, encodedPublic);
 
         assertAll(
-            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertEquals(keyPair.getPublic(), decodedPublic)
+            () -> assertKeyEquals(keyPair.getPrivate(), decodedPrivate),
+            () -> assertKeyEquals(keyPair.getPublic(), decodedPublic)
         );
     }
 
@@ -157,8 +158,8 @@ public class EncoderTest {
         PublicKey decodedPublic = provider.decodePublicKeyPEM(pemPublic);
 
         assertAll(
-            () -> assertEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertEquals(keyPair.getPublic(), decodedPublic)
+            () -> assertKeyEquals(keyPair.getPrivate(), decodedPrivate),
+            () -> assertKeyEquals(keyPair.getPublic(), decodedPublic)
         );
     }
 
@@ -186,10 +187,7 @@ public class EncoderTest {
         String encoded = Encoder.encode(certificate);
         Certificate decoded = provider.decodeCertificate("X.509", encoded);
 
-        assertAll(
-            () -> assertEquals(certificate, decoded),
-            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
-        );
+        assertCertificateEquals(certificate, decoded);
     }
 
     @ParameterizedTest
@@ -216,10 +214,7 @@ public class EncoderTest {
         String pem = Encoder.encodeToPEM(certificate);
         Certificate decoded = provider.decodeCertificatePEM("X.509", pem);
 
-        assertAll(
-            () -> assertEquals(certificate, decoded),
-            () -> assertEquals(keyPair.getPublic(), decoded.getPublicKey())
-        );
+        assertCertificateEquals(certificate, decoded);
     }
 
 }
