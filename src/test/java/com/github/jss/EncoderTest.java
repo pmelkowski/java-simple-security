@@ -79,22 +79,6 @@ public class EncoderTest {
         testEncodeKey(provider, algorithm, keySize);
     }
 
-    private static void testEncodeKey(Provider provider,
-            String algorithm, Integer keySize) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
-
-        String encodedPrivate = Encoder.encode(keyPair.getPrivate());
-        String encodedPublic = Encoder.encode(keyPair.getPublic());
-
-        PrivateKey decodedPrivate = provider.decodePrivateKey(algorithm, encodedPrivate);
-        PublicKey decodedPublic = provider.decodePublicKey(algorithm, encodedPublic);
-
-        assertAll(
-            () -> assertKeyEquals(keyPair.getPrivate(), decodedPrivate),
-            () -> assertKeyEquals(keyPair.getPublic(), decodedPublic)
-        );
-    }
-
     @EnabledForJreRange(minVersion = 24)
     @ParameterizedTest
     @CsvSource({
@@ -109,7 +93,12 @@ public class EncoderTest {
     })
     public void testEncodeNamedKey(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, null);
+        testEncodeKey(provider, algorithm, null);
+    }
+
+    private static void testEncodeKey(Provider provider,
+            String algorithm, Integer keySize) throws Exception {
+        KeyPair keyPair = provider.generateKeyPair(algorithm, keySize);
 
         String encodedPrivate = Encoder.encode(keyPair.getPrivate());
         String encodedPublic = Encoder.encode(keyPair.getPublic());
@@ -122,6 +111,7 @@ public class EncoderTest {
             () -> assertKeyEquals(keyPair.getPublic(), decodedPublic)
         );
     }
+
 
     @ParameterizedTest
     @CsvSource({
@@ -149,7 +139,7 @@ public class EncoderTest {
     })
     public void testEncodeKeyToPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String algorithm, Integer keySize) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(algorithm, keySize);
+        KeyPair keyPair = provider.generateKeyPair(algorithm, keySize);
 
         String pemPrivate = Encoder.encodeToPEM(keyPair.getPrivate());
         String pemPublic = Encoder.encodeToPEM(keyPair.getPublic());
@@ -178,11 +168,8 @@ public class EncoderTest {
     public void testEncodeCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
-        signingAlgorithm = signingAlgorithm + "with" + keyAlgorithm;
-        Certificate certificate = provider.getX509Certificate(
-                keyPair.getPublic(), keyPair.getPrivate(),
-                version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
+        Certificate certificate = generateCertificate(provider, keyAlgorithm, keySize, version,
+                validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
         String encoded = Encoder.encode(certificate);
         Certificate decoded = provider.decodeCertificate("X.509", encoded);
@@ -205,16 +192,23 @@ public class EncoderTest {
     public void testEncodeCertificateToPEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
-        signingAlgorithm = signingAlgorithm + "with" + keyAlgorithm;
-        Certificate certificate = provider.getX509Certificate(
-                keyPair.getPublic(), keyPair.getPrivate(),
-                version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
+        Certificate certificate = generateCertificate(provider, keyAlgorithm, keySize, version,
+                validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
         String pem = Encoder.encodeToPEM(certificate);
         Certificate decoded = provider.decodeCertificatePEM("X.509", pem);
 
         assertCertificateEquals(certificate, decoded);
+    }
+
+    private static Certificate generateCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
+            String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
+            BigInteger serialNumber, String signingAlgorithm) throws Exception {
+        KeyPair keyPair = provider.generateKeyPair(keyAlgorithm, keySize);
+        signingAlgorithm = signingAlgorithm + "with" + keyAlgorithm;
+        return provider.generateCertificate(
+                keyPair.getPublic(), keyPair.getPrivate(),
+                version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
     }
 
 }

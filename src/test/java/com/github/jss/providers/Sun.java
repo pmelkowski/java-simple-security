@@ -27,7 +27,7 @@ public class Sun extends Provider {
     }
 
     @Override
-	public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
+	public X509Certificate generateCertificate(PublicKey subjectKey, PrivateKey issuerKey, int version,
             int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber, String signingAlgorithm)
             throws Exception {
         AlgorithmId signingAlgorithmId = AlgorithmId.get(signingAlgorithm);

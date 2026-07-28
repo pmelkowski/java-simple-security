@@ -44,7 +44,7 @@ abstract public class Provider {
                     .invoke(null, algorithm, provider));
     }
 
-    public KeyPair getKeyPair(String algorithm, Integer keySize) throws Exception {
+    public KeyPair generateKeyPair(String algorithm, Integer keySize) throws Exception {
         KeyPairGenerator keyGen = findService(KeyPairGenerator.class, algorithm);
         if (keySize != null) {
             keyGen.initialize(keySize);
@@ -74,7 +74,7 @@ abstract public class Provider {
         return keyFactory.generatePublic(new X509EncodedKeySpec(encoded));
     }
 
-    abstract public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey,
+    abstract public X509Certificate generateCertificate(PublicKey subjectKey, PrivateKey issuerKey,
             int version, int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber,
             String signingAlgorithm) throws Exception;
 

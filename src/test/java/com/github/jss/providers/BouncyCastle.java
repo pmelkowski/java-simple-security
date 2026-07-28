@@ -42,7 +42,7 @@ public class BouncyCastle extends Provider {
     }
 
     @Override
-    public X509Certificate getX509Certificate(PublicKey subjectKey, PrivateKey issuerKey,
+    public X509Certificate generateCertificate(PublicKey subjectKey, PrivateKey issuerKey,
             int version, int validityAmount, ChronoUnit validityUnit, BigInteger serialNumber,
             String signingAlgorithm) throws NoSuchAlgorithmException, OperatorCreationException,
             CertificateException {

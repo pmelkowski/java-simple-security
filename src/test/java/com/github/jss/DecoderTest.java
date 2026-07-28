@@ -100,7 +100,7 @@ public class DecoderTest {
 
     private static void testDecodePrivateKeyString(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
+        PrivateKey privateKey = provider.generateKeyPair(algorithm, keySize).getPrivate();
         String encodedPrivate = provider.encodeKey(privateKey);
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
@@ -171,7 +171,7 @@ public class DecoderTest {
 
     private static void testDecodePrivateKeyPem(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
+        PrivateKey privateKey = provider.generateKeyPair(algorithm, keySize).getPrivate();
         String pemPrivate = provider.encodeToPEM(privateKey);
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(pemPrivate);
@@ -262,7 +262,7 @@ public class DecoderTest {
 
     private static void testDecodePrivateKey(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        PrivateKey privateKey = provider.getKeyPair(algorithm, keySize).getPrivate();
+        PrivateKey privateKey = provider.generateKeyPair(algorithm, keySize).getPrivate();
         byte[] encodedPrivate = privateKey.getEncoded();
 
         PrivateKey decodedPrivate = Decoder.decodePrivateKey(encodedPrivate);
@@ -353,7 +353,7 @@ public class DecoderTest {
 
     private static void testDecodePublicKeyString(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
+        PublicKey publicKey = provider.generateKeyPair(algorithm, keySize).getPublic();
         String encodedPublic = provider.encodeKey(publicKey);
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
@@ -423,7 +423,7 @@ public class DecoderTest {
 
     private static void testDecodePublicKeyPem(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
+        PublicKey publicKey = provider.generateKeyPair(algorithm, keySize).getPublic();
         String pemPublic = provider.encodeToPEM(publicKey);
 
         PublicKey decodedPublic = Decoder.decodePublicKey(pemPublic);
@@ -514,7 +514,7 @@ public class DecoderTest {
 
     private static void testDecodePublicKey(Provider provider,
             String algorithm, Integer keySize, Class<?> keyClass) throws Exception {
-        PublicKey publicKey = provider.getKeyPair(algorithm, keySize).getPublic();
+        PublicKey publicKey = provider.generateKeyPair(algorithm, keySize).getPublic();
         byte[] encodedPublic = publicKey.getEncoded();
 
         PublicKey decodedPublic = Decoder.decodePublicKey(encodedPublic);
@@ -541,9 +541,9 @@ public class DecoderTest {
     public void testDecodeCertificateString(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm, Class<?> certClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
+        KeyPair keyPair = provider.generateKeyPair(keyAlgorithm, keySize);
         signingAlgorithm = signingAlgorithm + "with" + keyAlgorithm;
-        Certificate certificate = provider.getX509Certificate(
+        Certificate certificate = provider.generateCertificate(
                 keyPair.getPublic(), keyPair.getPrivate(),
                 version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
@@ -566,9 +566,9 @@ public class DecoderTest {
     public void testDecodeCertificatePEM(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm, Class<?> certClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
+        KeyPair keyPair = provider.generateKeyPair(keyAlgorithm, keySize);
         signingAlgorithm = signingAlgorithm + "with" + keyAlgorithm;
-        Certificate certificate = provider.getX509Certificate(
+        Certificate certificate = provider.generateCertificate(
                 keyPair.getPublic(), keyPair.getPrivate(),
                 version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
@@ -596,9 +596,9 @@ public class DecoderTest {
     public void testDecodeCertificate(@ConvertWith(ProviderConverter.class) Provider provider,
             String keyAlgorithm, int keySize, int version, int validityAmount, ChronoUnit validityUnit,
             BigInteger serialNumber, String signingAlgorithm, Class<?> certClass) throws Exception {
-        KeyPair keyPair = provider.getKeyPair(keyAlgorithm, keySize);
+        KeyPair keyPair = provider.generateKeyPair(keyAlgorithm, keySize);
         signingAlgorithm = signingAlgorithm + "with" + keyAlgorithm;
-        Certificate certificate = provider.getX509Certificate(
+        Certificate certificate = provider.generateCertificate(
                 keyPair.getPublic(), keyPair.getPrivate(),
                 version, validityAmount, validityUnit, serialNumber, signingAlgorithm);
 
